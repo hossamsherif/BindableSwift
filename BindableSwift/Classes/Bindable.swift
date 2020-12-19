@@ -26,6 +26,21 @@ protocol Disposable {
     func dispose()
 }
 
+/// KeyPair is a pair of primary and secondary String keys
+fileprivate struct KeyPair: Hashable {
+    var primary: ObjectIdentifier
+    var secondary: ObjectKeyPathPair
+}
+
+fileprivate struct ObjectKeyPathPair: Hashable {
+    var objectHash: ObjectIdentifier
+    var keyPathHash: AnyHashable
+    init(_ object: AnyObject, _ keyPath: AnyKeyPath) {
+        objectHash = ObjectIdentifier(object)
+        keyPathHash = ObjectIdentifier(keyPath)
+    }
+}
+
 public class BindableDisposable: Disposable  {
     //MARK:- Private properties
     private var keyPair: KeyPair
@@ -39,10 +54,10 @@ public class BindableDisposable: Disposable  {
     ///   - secondaryKey: secondaryKey of BindableDisposable object
     ///   - disposeBlock: disposeBlock to be fired on dispose
     /// - Returns: BindableDisposable instance
-    fileprivate init(_ primaryKey:ObjectIdentifier, _ secondaryKey:String, _ disposeBlock: @escaping () -> ()) {
+    fileprivate init(_ primaryKey:ObjectIdentifier, _ secondaryKey:ObjectKeyPathPair, _ disposeBlock: @escaping () -> ()) {
         self.disposeBlock = disposeBlock
         self.keyPair = KeyPair(primary: primaryKey, secondary: secondaryKey)
-        DisposableBag[primaryKey, secondaryKey] = self
+        DisposableBag[primaryKey, secondaryKey: secondaryKey] = self
     }
     
     /// BindableDisposable init
@@ -56,10 +71,6 @@ public class BindableDisposable: Disposable  {
         DisposableBag[keyPair: keyPair] = self
     }
     
-    deinit {
-        disposeBlock()
-    }
-    
     //MARK:- Public methods
     /// Short hand for dispose(primaryKey: )
     /// - Parameter referenceObject: primaryKey of diposeBlock(s) to dispose
@@ -70,19 +81,24 @@ public class BindableDisposable: Disposable  {
     /// Dispose a Bindable instance
     public func dispose() {
         disposeBlock()
-        DisposableBag.remove(keyPair: keyPair)
+        print("before: \((DisposableBag.primaryContainer.count, DisposableBag.secondaryContainer.count, DisposableBag.manualContainer.count))")
+        if let _ = DisposableBag.remove(keyPair: keyPair) {
+            let key = UInt(bitPattern: keyPair.primary).description
+            DisposableBag.manualContainer.removeValue(forKey: key)
+        }
+        print("after: \((DisposableBag.primaryContainer.count, DisposableBag.secondaryContainer.count, DisposableBag.manualContainer.count))")
     }
     
     //MARK:- private methods
     /// dispose all with primaryKey
     /// - Parameter primaryKey: primaryKey of diposeBlock(s) to dispose
-    fileprivate static func dispose(primaryKey: ObjectIdentifier) {
-        DisposableBag[primaryKey: primaryKey]?.forEach { $0.value.dispose() }
+    static func dispose(primaryKey: ObjectIdentifier) {
+        DisposableBag[primaryKey: primaryKey].forEach { DisposableBag[secondaryKey: $0]?.dispose() }
     }
     /// dispose all with secondaryKey
     /// - Parameter primaryKey: secondaryKey of diposeBlock to dispose
-    fileprivate static func dispose(secondaryKey: String) {
-        DisposableBag[secondaryKey: secondaryKey]?.forEach{ $0.value.dispose() }
+    fileprivate static func dispose(secondaryKey: ObjectKeyPathPair) {
+        DisposableBag[secondaryKey: secondaryKey]?.dispose()
     }
     
     /// Container for seto fo disposable.
@@ -93,8 +109,8 @@ public class BindableDisposable: Disposable  {
     /// - Returns: return a BindableDisposable of the set of BindableDisposable to dipose later on
     @discardableResult
     public static func container(_ referenceObject: AnyObject, _ bindableDisposables:[BindableDisposable]) -> BindableDisposable {
-        let keyPair = KeyPair(primary: ObjectIdentifier(referenceObject), secondary: "")
-        if let bindableDisposable = DisposableBag[keyPair: keyPair] {
+        let key = UInt(bitPattern: ObjectIdentifier(referenceObject)).description
+        if let bindableDisposable = DisposableBag.manualContainer[key] {
             let oldDisposeBlock = bindableDisposable.disposeBlock
             bindableDisposable.disposeBlock = {
                 oldDisposeBlock()
@@ -102,15 +118,9 @@ public class BindableDisposable: Disposable  {
             }
             return bindableDisposable
         }
-        return BindableDisposable(keyPair) {
+        return BindableDisposable(ObjectIdentifier(referenceObject), ObjectKeyPathPair(referenceObject, \BindableDisposable.self)) {
             bindableDisposables.forEach { $0.dispose() }
         }
-    }
-    
-    /// KeyPair is a pair of primary and secondary String keys
-    fileprivate struct KeyPair: Hashable {
-        var primary: ObjectIdentifier
-        var secondary: String
     }
     
     /// DisposableBag contains all the DisposableBindable of the current active Bindable object
@@ -118,87 +128,176 @@ public class BindableDisposable: Disposable  {
     private class DisposableBag {
         
         /// Main DisposableBag container
-        fileprivate static var container = [KeyPair: BindableDisposable]()
+        fileprivate static var primaryContainer = [ObjectIdentifier: [ObjectKeyPathPair]]()
+        fileprivate static var secondaryContainer = [ObjectKeyPathPair: (ObjectIdentifier, BindableDisposable)]()
+        fileprivate static var manualContainer = [String: BindableDisposable]()
         
         fileprivate static let lock = NSRecursiveLock()
         
         //MARK:- subscripts
-        static subscript(primaryKey: ObjectIdentifier, secondaryKey: String) -> BindableDisposable? {
+        static subscript(primaryKey primaryKey: ObjectIdentifier) -> [ObjectKeyPathPair] {
             get {
-                let keyPair = KeyPair(primary: primaryKey, secondary: secondaryKey)
-                return DisposableBag.container[keyPair]
+                return DisposableBag.primaryContainer[primaryKey] ?? []
             }
             set {
-                
-                let keyPair = KeyPair(primary: primaryKey, secondary: secondaryKey)
-                DisposableBag.container[keyPair] = newValue
-            }
-        }
-        static subscript(primaryKey primaryKey: ObjectIdentifier) -> [KeyPair: BindableDisposable]? {
-            get {
-                return DisposableBag.container.filter { $0.key.primary == primaryKey }
+                lock.lock(); defer { lock.unlock() }
+                DisposableBag.primaryContainer[primaryKey] = newValue
             }
         }
         
-        static subscript(secondaryKey secondaryKey: String) -> [KeyPair: BindableDisposable]? {
+        static subscript(secondaryKey secondaryKey: ObjectKeyPathPair) -> BindableDisposable? {
             get {
-                return DisposableBag.container.filter { $0.key.secondary == secondaryKey }
+                return DisposableBag.secondaryContainer[secondaryKey]?.1
+            }
+        }
+        
+        static subscript(primaryKey: ObjectIdentifier, secondaryKey secondaryKey: ObjectKeyPathPair) -> BindableDisposable? {
+            get {
+                return DisposableBag.secondaryContainer[secondaryKey]?.1
+            }
+            set {
+                lock.lock(); defer { lock.unlock() }
+                guard let newValue = newValue else { return }
+                DisposableBag.secondaryContainer[secondaryKey] = (primaryKey, newValue)
+                DisposableBag.primaryContainer[primaryKey]?.append(secondaryKey)
             }
         }
         
         static subscript(keyPair keyPair: KeyPair) -> BindableDisposable? {
             get {
-                return DisposableBag.container[keyPair]
+                return DisposableBag.secondaryContainer[keyPair.secondary]?.1
             }
             set {
                 lock.lock(); defer { lock.unlock() }
-                DisposableBag.container[keyPair] = newValue
+                guard let newValue = newValue else { return }
+                DisposableBag.secondaryContainer[keyPair.secondary] = (keyPair.primary, newValue)
+                DisposableBag.primaryContainer[keyPair.primary]?.append(keyPair.secondary)
             }
         }
+        
         //MARK:- Getters
-        static func get(secondaryKey:String) -> [KeyPair: BindableDisposable]? {
-            return DisposableBag.container.filter { $0.key.secondary == secondaryKey }
-        }
-        static func get(primaryKey:ObjectIdentifier) -> [KeyPair: BindableDisposable]? {
-            return DisposableBag.container.filter { $0.key.primary == primaryKey }
-        }
-        static func get(_ primaryKey: ObjectIdentifier,_ secondaryKey: String) -> BindableDisposable? {
-            return DisposableBag.container[KeyPair(primary: primaryKey, secondary: secondaryKey)]
-        }
         
         //MARK:- Setter
-        static func set(_ primaryKey:ObjectIdentifier, _ secondaryKey: String, value: BindableDisposable)  {
+        fileprivate static func set(_ primaryKey:ObjectIdentifier, _ secondaryKey: ObjectKeyPathPair, value: BindableDisposable)  {
             lock.lock(); defer { lock.unlock() }
-            let key = KeyPair(primary: primaryKey, secondary: secondaryKey)
-            DisposableBag.container[key] = value
+            DisposableBag.primaryContainer[primaryKey]?.append(secondaryKey)
+            DisposableBag.secondaryContainer[secondaryKey] = (primaryKey, value)
         }
         
         //MARK:- Remove Methods
-        static func remove(secondaryKey: String) {
+        static func remove(secondaryKey: ObjectKeyPathPair) {
             lock.lock(); defer { lock.unlock() }
-            DisposableBag.container
-                .filter { $0.key.secondary == secondaryKey }
-                .forEach{ DisposableBag.container.removeValue(forKey: $0.key) }
+            if let primaryKey = DisposableBag.secondaryContainer.removeValue(forKey: secondaryKey)?.0 {
+                DisposableBag[primaryKey: primaryKey] = DisposableBag[primaryKey: primaryKey].filter { $0.hashValue == secondaryKey.hashValue }
+            }
+        }
+        @discardableResult
+        static func remove(primaryKey: ObjectIdentifier) -> [ObjectKeyPathPair]? {
+            lock.lock(); defer { lock.unlock() }
+            DisposableBag[primaryKey: primaryKey]
+                .forEach{ DisposableBag.secondaryContainer.removeValue(forKey: $0) }
+            return DisposableBag.primaryContainer.removeValue(forKey: primaryKey)
         }
         
-        static func remove(primaryKey: ObjectIdentifier) {
-            lock.lock(); defer { lock.unlock() }
-            DisposableBag.container
-                .filter { $0.key.primary == primaryKey }
-                .forEach{ DisposableBag.container.removeValue(forKey: $0.key) }
+        @discardableResult
+        static func remove(keyPair: KeyPair) -> BindableDisposable? {
+            return DisposableBag.remove(keyPair.primary, keyPair.secondary)
         }
         
-        static func remove(keyPair:KeyPair) {
+        static func remove(_ primaryKey: ObjectIdentifier, _ secondaryKey: ObjectKeyPathPair) -> BindableDisposable? {
             lock.lock(); defer { lock.unlock() }
-            DisposableBag.container.removeValue(forKey: keyPair)
-        }
-        
-        static func remove(_ primaryKey: ObjectIdentifier, _ secondaryKey: String) {
-            lock.lock(); defer { lock.unlock() }
-            let key = KeyPair(primary: primaryKey, secondary: secondaryKey)
-            DisposableBag.container.removeValue(forKey: key)
+            DisposableBag[primaryKey: primaryKey] = DisposableBag[primaryKey: primaryKey].filter { $0.hashValue == secondaryKey.hashValue }
+            return DisposableBag.secondaryContainer.removeValue(forKey: secondaryKey)?.1
         }
     }
+
+    
+//    /// DisposableBag contains all the DisposableBindable of the current active Bindable object
+//    /// Used for dispose deallocated or to clean before rebinding with new bindable
+//    private class DisposableBag {
+//
+//        /// Main DisposableBag container
+//        fileprivate static var container = [KeyPair: BindableDisposable]()
+//
+//        fileprivate static let lock = NSRecursiveLock()
+//
+//        //MARK:- subscripts
+//        static subscript(primaryKey: ObjectIdentifier, secondaryKey: String) -> BindableDisposable? {
+//            get {
+//                let keyPair = KeyPair(primary: primaryKey, secondary: secondaryKey)
+//                return DisposableBag.container[keyPair]
+//            }
+//            set {
+//
+//                let keyPair = KeyPair(primary: primaryKey, secondary: secondaryKey)
+//                DisposableBag.container[keyPair] = newValue
+//            }
+//        }
+//        static subscript(primaryKey primaryKey: ObjectIdentifier) -> [KeyPair: BindableDisposable]? {
+//            get {
+//                return DisposableBag.container.filter { $0.key.primary == primaryKey }
+//            }
+//        }
+//
+//        static subscript(secondaryKey secondaryKey: String) -> [KeyPair: BindableDisposable]? {
+//            get {
+//                return DisposableBag.container.filter { $0.key.secondary == secondaryKey }
+//            }
+//        }
+//
+//        static subscript(keyPair keyPair: KeyPair) -> BindableDisposable? {
+//            get {
+//                return DisposableBag.container[keyPair]
+//            }
+//            set {
+//                lock.lock(); defer { lock.unlock() }
+//                DisposableBag.container[keyPair] = newValue
+//            }
+//        }
+//        //MARK:- Getters
+//        static func get(secondaryKey:String) -> [KeyPair: BindableDisposable]? {
+//            return DisposableBag.container.filter { $0.key.secondary == secondaryKey }
+//        }
+//        static func get(primaryKey:ObjectIdentifier) -> [KeyPair: BindableDisposable]? {
+//            return DisposableBag.container.filter { $0.key.primary == primaryKey }
+//        }
+//        static func get(_ primaryKey: ObjectIdentifier,_ secondaryKey: String) -> BindableDisposable? {
+//            return DisposableBag.container[KeyPair(primary: primaryKey, secondary: secondaryKey)]
+//        }
+//
+//        //MARK:- Setter
+//        static func set(_ primaryKey:ObjectIdentifier, _ secondaryKey: String, value: BindableDisposable)  {
+//            lock.lock(); defer { lock.unlock() }
+//            let key = KeyPair(primary: primaryKey, secondary: secondaryKey)
+//            DisposableBag.container[key] = value
+//        }
+//
+//        //MARK:- Remove Methods
+//        static func remove(secondaryKey: String) {
+//            lock.lock(); defer { lock.unlock() }
+//            DisposableBag.container
+//                .filter { $0.key.secondary == secondaryKey }
+//                .forEach{ DisposableBag.container.removeValue(forKey: $0.key) }
+//        }
+//
+//        static func remove(primaryKey: ObjectIdentifier) {
+//            lock.lock(); defer { lock.unlock() }
+//            DisposableBag.container
+//                .filter { $0.key.primary == primaryKey }
+//                .forEach{ DisposableBag.container.removeValue(forKey: $0.key) }
+//        }
+//
+//        static func remove(keyPair:KeyPair) {
+//            lock.lock(); defer { lock.unlock() }
+//            DisposableBag.container.removeValue(forKey: keyPair)
+//        }
+//
+//        static func remove(_ primaryKey: ObjectIdentifier, _ secondaryKey: String) {
+//            lock.lock(); defer { lock.unlock() }
+//            let key = KeyPair(primary: primaryKey, secondary: secondaryKey)
+//            DisposableBag.container.removeValue(forKey: key)
+//        }
+//    }
 }
 
 /// AbstractBindable to constrain Bindable methods and property
@@ -364,7 +463,8 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
         currentValue.map { completion($0[keyPath: sourceKeyPath]) }
         let secondaryKey = UUID().uuidString
         observers[secondaryKey] = { completion($0[keyPath: sourceKeyPath]) }
-        return  BindableDisposable(primaryKey, secondaryKey) { [weak self] in
+        let BindableDisposableSecondaryKey = ObjectKeyPathPair(secondaryKey as AnyObject, \String.self)
+        return  BindableDisposable(primaryKey, BindableDisposableSecondaryKey) { [weak self] in
             self?.observers.removeValue(forKey: secondaryKey)
         }
     }
@@ -435,12 +535,14 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
                                               _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                               mode: BindMode = .oneWay,
                                               completion: @escaping (BindingType) -> Void) -> BindableDisposable {
-        let secondaryKey = getObserverHash(object, objectKeyPath)
+        let observerKey = getObserverHash(object, objectKeyPath)
+        let secondaryKey = ObjectKeyPathPair(object, objectKeyPath)
+        
         //Dipose previous binding from object/objectKeyPath pair
         BindableDisposable.dispose(secondaryKey: secondaryKey)
         // if there is a initial value run the completion
         currentValue.map { completion($0) }
-        observers[secondaryKey] = { completion($0) }
+        observers[observerKey] = { completion($0) }
         return BindableDisposable(primaryKey, secondaryKey) { [weak self, weak object, weak objectKeyPath] in
             guard let object = object, let objectKeyPath = objectKeyPath else { return }
             self?.unbind(from: object, objectKeyPath, mode: mode)

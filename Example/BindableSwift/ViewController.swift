@@ -146,9 +146,9 @@ class ViewController: UIViewController {
         })
         viewModel.name.bind(\String.self, to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" })
         
-        //        viewModel.name.observe(\String.self) { [weak self] in
-        //            self?.myView.switchControl.setOn($0.isEmpty, animated: true)
-        //        }
+        viewModel.name.observe(\String.self) { [weak self] in
+            self?.myView.switchControl.setOn($0.isEmpty, animated: true)
+        }
         viewModel.isLoading.bind(\Bool.self, to: myView, \.myEnum, mapper: { $0 ? .x : .y }) { [weak self] in
             print($0, self?.myView.myEnum ?? "-")
         }
