@@ -1,0 +1,6 @@
+framework module BindableSwift {
+  umbrella header "BindableSwift-umbrella.h"
+
+  export *
+  module * { export * }
+}

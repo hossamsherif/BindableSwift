@@ -1,0 +1,16 @@
+PODS:
+  - BindableSwift (0.1.0)
+
+DEPENDENCIES:
+  - BindableSwift (from `../`)
+
+EXTERNAL SOURCES:
+  BindableSwift:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  BindableSwift: af96930bc01a04c2c3862df41a6100f25dd12d6a
+
+PODFILE CHECKSUM: fa865193b35e5ce36dadf261223d479f494097a2
+
+COCOAPODS: 1.10.0
