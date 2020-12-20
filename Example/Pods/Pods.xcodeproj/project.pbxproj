@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		53CFF502CB7F6DEEA999EF4C13B894F0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */; };
+		5F10AAF6258F31F7004F1664 /* BindableDisposable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F10AAF5258F31F7004F1664 /* BindableDisposable.swift */; };
 		640622A10E3BC0163D62229F1AF83CF4 /* BindableSwift-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = DB2FB9630047EB9418AFCD6B13D2036C /* BindableSwift-dummy.m */; };
 		6F1C7FBCD4A75B72E351E4F61CA28F7D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */; };
 		77DEDA5D32146F5B7A0FE1A622E7A1C7 /* Pods-BindableSwift_Example-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = E7910E20BED7FE360FDE47BA0E60A8D5 /* Pods-BindableSwift_Example-dummy.m */; };
@@ -40,29 +41,30 @@
 		02BDEBC1A00BAA0F5A98C81709E10124 /* BindableSwift.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = BindableSwift.debug.xcconfig; sourceTree = "<group>"; };
 		074A9D51FE2C1229E456202E407CB862 /* Pods-BindableSwift_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-BindableSwift_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		0B479AF101A7DEBB4ACD0F73639B03A5 /* Pods-BindableSwift_Tests-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-BindableSwift_Tests-acknowledgements.markdown"; sourceTree = "<group>"; };
-		0C64A8CD8CBE92A906192FAF8F1039B7 /* Pods_BindableSwift_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Pods_BindableSwift_Example.framework; path = "Pods-BindableSwift_Example.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0C64A8CD8CBE92A906192FAF8F1039B7 /* Pods_BindableSwift_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BindableSwift_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C90678321BBB21DC12BA569A8F80CDC /* Pods-BindableSwift_Tests.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-BindableSwift_Tests.modulemap"; sourceTree = "<group>"; };
 		4730A2C4BC4DD518A20F745C21EB301B /* Pods-BindableSwift_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-BindableSwift_Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		4A853E199FB46D47938881BC310F7303 /* Bindable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Bindable.swift; path = BindableSwift/Classes/Bindable.swift; sourceTree = "<group>"; };
 		4B4B04E9A09880650755BCADDE903B50 /* BindableSwift-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "BindableSwift-umbrella.h"; sourceTree = "<group>"; };
-		62D134CE219561239637ECD63201C2BB /* BindableSwift.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; path = BindableSwift.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		5F10AAF5258F31F7004F1664 /* BindableDisposable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BindableDisposable.swift; path = BindableSwift/Classes/BindableDisposable.swift; sourceTree = "<group>"; };
+		62D134CE219561239637ECD63201C2BB /* BindableSwift.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; path = BindableSwift.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		689052820E669ADB252500F0C5BF69A3 /* Pods-BindableSwift_Tests-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-BindableSwift_Tests-acknowledgements.plist"; sourceTree = "<group>"; };
 		6A78276C3AC666391C1C252D94BE1C2A /* Pods-BindableSwift_Tests-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-BindableSwift_Tests-dummy.m"; sourceTree = "<group>"; };
 		73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		76546A1826513EB87FC56954B87EB4ED /* BindableSwift.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = BindableSwift.release.xcconfig; sourceTree = "<group>"; };
-		79563BAED9A9838C9AFD28BF1D7E1072 /* Pods_BindableSwift_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Pods_BindableSwift_Tests.framework; path = "Pods-BindableSwift_Tests.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		79563BAED9A9838C9AFD28BF1D7E1072 /* Pods_BindableSwift_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BindableSwift_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E681F0F5F27E38CF21B41014DD1E4E7 /* Pods-BindableSwift_Example.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-BindableSwift_Example.modulemap"; sourceTree = "<group>"; };
 		801D7721FD68E0880C5BEA8C7EEB8935 /* Pods-BindableSwift_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-BindableSwift_Example.release.xcconfig"; sourceTree = "<group>"; };
 		8A9EFF25E274D06CD1DC74FEA22EDD62 /* Pods-BindableSwift_Example-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-BindableSwift_Example-acknowledgements.markdown"; sourceTree = "<group>"; };
 		8B6A9F6DA39EC06610AA14DD0CC250EC /* Pods-BindableSwift_Tests-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-BindableSwift_Tests-Info.plist"; sourceTree = "<group>"; };
 		9242A46CDF4BD14F43B1F9A638636830 /* Pods-BindableSwift_Example-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-BindableSwift_Example-acknowledgements.plist"; sourceTree = "<group>"; };
-		9C941B9F32713330536B70074A10322B /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE; sourceTree = "<group>"; };
-		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
-		A6A882BF56E1A05B6B765C3AD9C18AA1 /* BindableSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = BindableSwift.framework; path = BindableSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9C941B9F32713330536B70074A10322B /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		A6A882BF56E1A05B6B765C3AD9C18AA1 /* BindableSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BindableSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8F93C3A820EDD0C2F9C1C1A52D2C922 /* Pods-BindableSwift_Example-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-BindableSwift_Example-frameworks.sh"; sourceTree = "<group>"; };
 		ABE7E6C84D672770F78A418920A89E83 /* Pods-BindableSwift_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-BindableSwift_Tests.release.xcconfig"; sourceTree = "<group>"; };
 		C2F243D0A1970C98ACF93F2C205EA3C8 /* Pods-BindableSwift_Example-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-BindableSwift_Example-umbrella.h"; sourceTree = "<group>"; };
-		D142A142491EFE22B04C1679AC0862BF /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; path = README.md; sourceTree = "<group>"; };
+		D142A142491EFE22B04C1679AC0862BF /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		DB2FB9630047EB9418AFCD6B13D2036C /* BindableSwift-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "BindableSwift-dummy.m"; sourceTree = "<group>"; };
 		DEE4965B3D2F9BD8EBD5F4EAC068290D /* Pods-BindableSwift_Tests-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-BindableSwift_Tests-umbrella.h"; sourceTree = "<group>"; };
 		E207C35E953C9BDF933672B52F283515 /* BindableSwift.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = BindableSwift.modulemap; sourceTree = "<group>"; };
@@ -216,6 +218,7 @@
 			isa = PBXGroup;
 			children = (
 				4A853E199FB46D47938881BC310F7303 /* Bindable.swift */,
+				5F10AAF5258F31F7004F1664 /* BindableDisposable.swift */,
 				B98AE7FF6C06D59A171443BE976C809C /* Pod */,
 				1789764FE288B60FC537EE8DB2A82D26 /* Support Files */,
 			);
@@ -375,6 +378,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5F10AAF6258F31F7004F1664 /* BindableDisposable.swift in Sources */,
 				9AF8644F72137C2320A3D44171BA2281 /* Bindable.swift in Sources */,
 				640622A10E3BC0163D62229F1AF83CF4 /* BindableSwift-dummy.m in Sources */,
 			);
@@ -629,8 +633,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_INSTALLED_PRODUCT = NO;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 5.0;
 				SYMROOT = "${SRCROOT}/../build";
 			};

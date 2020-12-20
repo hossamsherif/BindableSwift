@@ -29,8 +29,8 @@ class UserDefaultsManager: UserDefaultsManagerProtocol {
     private let userDefaults = UserDefaults.standard
     
     private init() {
-//        appVersion.bind(\String.self, to: self, \.appVersionValue)
-//        isFirstTime.bind(\Bool.self, to: self, \.isFirstTimeValue)
+        appVersion.bind(\String.self, to: self, \.appVersionValue)
+        isFirstTime.bind(\Bool.self, to: self, \.isFirstTimeValue)
     }
     
     // MARK:- Properties
@@ -92,17 +92,18 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         setupView()
         bindVM()
-        bindUserDefaults()
+        
         viewModel.viewDidLoad()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        bindUserDefaults()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-//        BindableDisposable.dispose(self)
+        BindableDisposable.dispose(self)
     }
     
     func setupView() {
@@ -146,9 +147,9 @@ class ViewController: UIViewController {
         })
         viewModel.name.bind(\String.self, to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" })
         
-        //        viewModel.name.observe(\String.self) { [weak self] in
-        //            self?.myView.switchControl.setOn($0.isEmpty, animated: true)
-        //        }
+        viewModel.name.observe(\String.self) { [weak self] in
+            self?.myView.switchControl.setOn($0.isEmpty, animated: true)
+        }
         viewModel.isLoading.bind(\Bool.self, to: myView, \.myEnum, mapper: { $0 ? .x : .y }) { [weak self] in
             print($0, self?.myView.myEnum ?? "-")
         }

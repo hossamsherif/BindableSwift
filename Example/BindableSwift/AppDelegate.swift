@@ -15,15 +15,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        UserDefaultsManager.shared.appVersion.value = "1.0"
+//        UserDefaultsManager.shared.appVersion.value = "1.0"
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.rootViewController = UINavigationController(rootViewController:  ViewController.create())
         window.makeKeyAndVisible()
         self.window = window
         
         MainThread(self, after: .now() + 10) { (self) in
-            self.window?.rootViewController = UINavigationController(rootViewController: ViewController.create())
-            UserDefaultsManager.shared.appVersion.value = "2.0"
+            self.window?.rootViewController = UINavigationController(rootViewController: UIViewController())
+//            UserDefaultsManager.shared.appVersion.value = "2.0"
         }
         return true
     }
