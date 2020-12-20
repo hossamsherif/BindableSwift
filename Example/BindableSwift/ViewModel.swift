@@ -15,6 +15,14 @@ struct MyStruct {
 }
 
 protocol ViewModelProtocol: class {
+    var input: Event.Immutable { get }
+    var input2: Event.Immutable { get }
+    var input3: Eventable<Int>.Immutable { get }
+    var input4: Event.Immutable { get }
+    var input5: Eventable<(name: String, active: Bool)>.Immutable { get }
+    
+    
+    var shouldGoToVC: Bindable<Bool>.Immutable { get }
     var name: Bindable<String>.Immutable { get }
     var isLoading: Bindable<Bool>.Immutable { get }
     var data: Bindable<[CellViewModelProtocol]>.Immutable { get }
@@ -23,7 +31,23 @@ protocol ViewModelProtocol: class {
 }
 
 class ViewModel: ViewModelProtocol {
-
+    
+    let input: Event.Immutable = Event { completion in
+        print("hello")
+        completion()
+    }.immutable
+    @Event var input2
+    lazy var input3 = Eventable<Int> { [weak self] completion in
+        self?.printHello(3)
+        completion(3)
+    }.immutable
+    lazy var input4 = Event { [weak self] _ in
+        self?.printHello(4)
+        self?.$shouldGoToVC = true
+    }.immutable
+    @Eventable<(name: String,active: Bool)> var input5
+    
+    @Bindable<Bool>(false) var shouldGoToVC
     @Bindable<Bool>(false) var isLoading
     @Bindable<String> var name
     @Bindable<[CellViewModelProtocol]> var data
@@ -32,6 +56,10 @@ class ViewModel: ViewModelProtocol {
     init() {
         $data = generateData()
         $myStruct = MyStruct(name: "ABC", active: true)
+        $input2 = { completion in
+            print("hello2")
+            completion()
+        }
     }
     
     func generateData() -> [CellViewModelProtocol] {
@@ -55,6 +83,14 @@ class ViewModel: ViewModelProtocol {
             self.$data.insert(CellViewMode(title: "7amada"), at: 0)
             self.$myStruct.name = "XYZ"
         }
+    }
+    
+    func printHello(_ int:Int) {
+        print("hello\(int)")
+    }
+    
+    func printHello3() {
+        print("hello3")
     }
     
 }

@@ -222,18 +222,6 @@ class BindaleTests: XCTestCase {
         XCTAssertEqual(provider.$sut, target.date)
     }
     
-//    func testBindTowWayUIButton() {
-//        let provider = BindableProvider<Date?>()
-//        let target = UIButton()
-//        target.setTitle("", for: <#T##UIControlState#>)
-//        provider.sut.bind(\Date.self, to: target, \.date, mode: .towWay)
-//        provider.$sut = Date()
-//        XCTAssertEqual(target.date, provider.$sut)
-//        target.date = Date(timeInterval: 24*60*60, since: Date())
-//        target.sendActions(for: .editingChanged)
-//        XCTAssertEqual(provider.$sut, target.date)
-//    }
-    
     func testBindTowWayUITextView() {
         let provider = BindableProvider<String>(value: "")
         let target = UITextView()

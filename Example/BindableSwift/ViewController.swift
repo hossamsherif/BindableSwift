@@ -166,8 +166,17 @@ class ViewController: UIViewController {
         viewModel.data.observe(\[CellViewModelProtocol].self) { [weak self] _ in
             self?.myView.tableView.reloadData()
         }
+        
+        viewModel.input2.event(myView.button, event: .touchUpInside) { [weak self] in
+            self?.navigationController?.pushViewController(ViewController.create(), animated: true)
+        }
+        
+//        viewModel.shouldGoToVC.observe(\Bool.self) { [weak self] in
+//            $0 ? self?.navigationController?.pushViewController(ViewController.create(), animated: true) : ()
+//        }
     }
 }
+
 //MARK:- UITableViewDataSource
 extension ViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -191,6 +200,11 @@ class MyView: UIView {
     
     var myEnum:MyEnum = .x
     
+    let button = { () -> UIButton in
+        let button = UIButton(type: .system)
+        button.setTitle("Let's go", for: .normal)
+        return button
+    }()
     let loader = UIActivityIndicatorView()
     let label = { () -> UILabel in
         let label = UILabel()
@@ -221,6 +235,7 @@ class MyView: UIView {
         super.init(frame: frame)
         backgroundColor = .white
         stackView.addArrangedSubview(loader)
+        stackView.addArrangedSubview(button)
         stackView.addArrangedSubview(label)
         stackView.addArrangedSubview(textField)
         stackView.addArrangedSubview(switchControl)
