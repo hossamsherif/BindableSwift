@@ -215,8 +215,8 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
         if mode == .towWay {
             addTowWayBinding(object, objectKeyPath)
         }
-        return addObserver(for: object, objectKeyPath) { [weak object, weak objectKeyPath] observed in
-            guard let object = object, let objectKeyPath = objectKeyPath else { return }
+        return addObserver(for: object, objectKeyPath) { [weak object] observed in
+            guard let object = object else { return }
             let value = observed[keyPath: sourceKeyPath]
             let mapped = mapper(value)
             object[keyPath: objectKeyPath] = mapped
