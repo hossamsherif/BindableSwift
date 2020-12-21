@@ -23,7 +23,7 @@ public enum BindMode {
 }
 
 /// AbstractBindable to constrain Bindable methods and property
-protocol AbastractBindable {
+public protocol AbastractBindable {
     associatedtype BindingType
     
     /// Current value
@@ -34,7 +34,13 @@ protocol AbastractBindable {
     ///   - sourceKeyPath: source key path for the current bindable
     ///   - completion: completion handler called after each update from source to object
     @discardableResult
-    func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ completion: @escaping (T) -> ()) -> BindableDisposable
+    func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ completion: @escaping (T) -> ()) -> Disposable
+    
+    /// Observe on bindable with default sourKeyPath on BindingType
+    /// - Parameters:
+    ///   - completion: completion handler called after each update from source to object
+    @discardableResult
+    func observe(_ completion: @escaping (BindingType) -> ()) -> Disposable
     
     /// bind an object to this bindable
     /// - Parameters:
@@ -50,10 +56,30 @@ protocol AbastractBindable {
                                   _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                   mode: BindMode,
                                   mapper: @escaping (T) -> R,
-                                  completion: ((T) -> ())?) -> BindableDisposable
+                                  completion: ((T) -> ())?) -> Disposable
+    
+    
+    /// bind an object to this bindable with default sourKeyPath on BindingType
+    /// - Parameters:
+    ///   - object: object to bind on
+    ///   - objectKeyPath: object key path
+    ///   - mode: binding mode type
+    ///   - mapper: transfomation mapper from source to object
+    ///   - completion: completion handler called after each update from source to object
+    @discardableResult
+    func bind<O: AnyObject, R>(to object: O,
+                                  _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
+                                  mode: BindMode,
+                                  mapper: @escaping (BindingType) -> R,
+                                  completion: ((BindingType) -> ())?) -> Disposable
 }
 //MARK:- Default AbastractBindable paramteres
-extension AbastractBindable {
+public extension AbastractBindable {
+    
+    @discardableResult
+    func observe(_ completion: @escaping (BindingType) -> ()) -> Disposable {
+        observe(\BindingType.self, completion)
+    }
     
     @discardableResult
     func bind<O: AnyObject, T, R>(_ sourceKeyPath: KeyPath<BindingType, T>,
@@ -61,8 +87,17 @@ extension AbastractBindable {
                                   _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                   mode: BindMode = .oneWay,
                                   mapper: @escaping (T) -> R = { $0 as! R },
-                                  completion: ((T) -> ())? = nil) -> BindableDisposable {
+                                  completion: ((T) -> ())? = nil) -> Disposable {
         bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, completion: completion)
+    }
+    
+    @discardableResult
+    func bind<O: AnyObject, R>(to object: O,
+                                  _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
+                                  mode: BindMode = .oneWay,
+                                  mapper: @escaping (BindingType) -> R = { $0 as! R },
+                                  completion: ((BindingType) -> ())? = nil) -> Disposable {
+        bind(\BindingType.self, to: object, objectKeyPath, mode: mode, mapper: mapper, completion: completion)
     }
 }
 
@@ -76,6 +111,8 @@ public class Bindable<BindingType>: AbastractBindable {
     
     /// BindableImmutable instance
     var immutable: Immutable
+    
+    private let lock = NSRecursiveLock()
     
     /// propertyWrapper wrapper value of type BindableImmutable<BindingType>
     /// which typically should be used by view to provide read only value
@@ -104,6 +141,7 @@ public class Bindable<BindingType>: AbastractBindable {
             return immutable.currentValue as! BindingType
         }
         set {
+            lock.lock(); defer{lock.unlock()}
             immutable.currentValue = newValue
             immutable.observers.forEach{ $1(newValue) }
         }
@@ -111,7 +149,7 @@ public class Bindable<BindingType>: AbastractBindable {
     
     /// projectedValue from @propertyWrapper to easily access value from Bindable instance
     /// While mantaing exported value property for ImmutableBindable
-    open var projectedValue: BindingType {
+    public var projectedValue: BindingType {
         get {
             return value
         }
@@ -121,7 +159,7 @@ public class Bindable<BindingType>: AbastractBindable {
     }
     
     @discardableResult
-    public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ completion: @escaping (T) -> ()) -> BindableDisposable {
+    public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ completion: @escaping (T) -> ()) -> Disposable {
         return immutable.observe(sourceKeyPath, completion)
     }
     
@@ -131,7 +169,7 @@ public class Bindable<BindingType>: AbastractBindable {
                                   _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                   mode: BindMode = .oneWay,
                                   mapper: @escaping (T) -> R = { $0 as! R },
-                                  completion: ((T) -> ())? = nil) -> BindableDisposable {
+                                  completion: ((T) -> ())? = nil) -> Disposable {
         return immutable.bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, completion: completion)
     }
 }
@@ -176,16 +214,16 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     
     /// cleaning before object deinit
     deinit {
-        BindableDisposable.dispose(primaryKey: primaryKey)
+        DisposableBag.dispose(primaryKey: primaryKey)
         NotificationCenter.default.removeObserver(self)
     }
     
     @discardableResult
-    public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ completion: @escaping (T) -> ()) -> BindableDisposable {
+    public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ completion: @escaping (T) -> ()) -> Disposable {
         currentValue.map { completion($0[keyPath: sourceKeyPath]) }
         let secondaryKey = UUID().uuidString
         observers[secondaryKey] = { completion($0[keyPath: sourceKeyPath]) }
-        return  BindableDisposable(primaryKey, secondaryKey) { [weak self] in
+        return  DisposableUnit(primaryKey, secondaryKey) { [weak self] in
             self?.observers.removeValue(forKey: secondaryKey)
         }
     }
@@ -210,7 +248,7 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
                                   _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                   mode: BindMode = .oneWay,
                                   mapper: @escaping (T) -> R = { $0 as! R },
-                                  completion: ((T) -> ())? = nil) -> BindableDisposable {
+                                  completion: ((T) -> ())? = nil) -> Disposable {
         
         if mode == .towWay {
             addTowWayBinding(object, objectKeyPath)
@@ -255,14 +293,14 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     private func addObserver<O: AnyObject, R>(for object: O,
                                               _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                               mode: BindMode = .oneWay,
-                                              completion: @escaping (BindingType) -> Void) -> BindableDisposable {
+                                              completion: @escaping (BindingType) -> Void) -> Disposable {
         let secondaryKey = getObserverHash(object, objectKeyPath)
         //Dipose previous binding from object/objectKeyPath pair
-        BindableDisposable.dispose(secondaryKey: secondaryKey)
-        // if there is a initial value run the completion
+        DisposableBag.dispose(secondaryKey: secondaryKey)
+        //Invoke completion for initial value (if any)
         currentValue.map { completion($0) }
         observers[secondaryKey] = { completion($0) }
-        return BindableDisposable(primaryKey, secondaryKey) { [weak self, weak object, weak objectKeyPath] in
+        return DisposableUnit(primaryKey, secondaryKey) { [weak self, weak object, weak objectKeyPath] in
             guard let object = object, let objectKeyPath = objectKeyPath else { return }
             self?.unbind(from: object, objectKeyPath, mode: mode)
         }
@@ -289,7 +327,7 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
                                                    _ objectKeyPath: ReferenceWritableKeyPath<O, R>) {
         if let control = object as? UIControl {
             control.addTarget(self, action: #selector(valueChanged), for: [.editingChanged, .valueChanged])
-        }else if object is UITextView {
+        }else if object is UITextView { //UITextView case since it is not part of UIControl
             NotificationCenter.default.addObserver(self,
                                                    selector: #selector(textViewValueChanged(_:)),
                                                    name: UITextView.textDidChangeNotification,
@@ -303,7 +341,7 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     fileprivate func removeTowWayBind<O: AnyObject>(_ object: O) {
         if let control = object as? UIControl {
             control.removeTarget(self, action: #selector(valueChanged), for: [.editingChanged, .valueChanged])
-        }else if object is UITextView {
+        }else if object is UITextView { //UITextView case since it is not part of UIControl
             NotificationCenter.default.removeObserver(self, name: UITextView.textDidChangeNotification, object: nil)
         }
         keyPath = nil

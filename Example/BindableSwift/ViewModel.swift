@@ -8,6 +8,7 @@
 import Foundation
 import BindableSwift
 
+typealias EventResult<T> = Eventable<Result<T, Error>>
 
 struct MyStruct {
     var name:String
@@ -18,47 +19,66 @@ protocol ViewModelProtocol: class {
     var input: Event.Immutable { get }
     var input2: Event.Immutable { get }
     var input3: Eventable<Int>.Immutable { get }
-    var input4: Event.Immutable { get }
+    var input4: Eventable<()>.Immutable { get }
     var input5: Eventable<(name: String, active: Bool)>.Immutable { get }
+    var input6: EventResult<Bool>.Immutable { get }
+    var input7: EventResult<Void>.Immutable { get }
     
     
     var shouldGoToVC: Bindable<Bool>.Immutable { get }
-    var name: Bindable<String>.Immutable { get }
+    
     var isLoading: Bindable<Bool>.Immutable { get }
     var data: Bindable<[CellViewModelProtocol]>.Immutable { get }
     var myStruct: Bindable<MyStruct>.Immutable { get }
-    func viewDidLoad()
+    var viewDidLoad: Event.Immutable { get }
+    
+    
+    var name: Bindable<String>.Immutable { get }
 }
 
 class ViewModel: ViewModelProtocol {
     
-    let input: Event.Immutable = Event { completion in
+    let input: Event.Immutable = Event {
         print("hello")
-        completion()
     }.immutable
     @Event var input2
-    lazy var input3 = Eventable<Int> { [weak self] completion in
+    lazy var input3 = Eventable<Int> { [weak self] stateHandler in
         self?.printHello(3)
-        completion(3)
+        stateHandler(3)
     }.immutable
-    lazy var input4 = Event { [weak self] _ in
+    lazy var input4 = Eventable<()>({ [weak self] stateHandler in
         self?.printHello(4)
         self?.$shouldGoToVC = true
-    }.immutable
+        stateHandler(())
+    }).immutable
     @Eventable<(name: String,active: Bool)> var input5
+    @EventResult<Bool> var input6
+    lazy var input7 = EventResult<()>({ [weak self] stateHandler in
+        self?.printHello(4)
+        self?.$shouldGoToVC = true
+        stateHandler(.success(()))
+    }).immutable
+    lazy var viewDidLoad = Event(viewDidLoadHanlding).immutable
     
     @Bindable<Bool>(false) var shouldGoToVC
     @Bindable<Bool>(false) var isLoading
-    @Bindable<String> var name
+    
     @Bindable<[CellViewModelProtocol]> var data
     @Bindable<MyStruct> var myStruct
+    
+    
+    
+    
+    @Bindable<String> var name
     
     init() {
         $data = generateData()
         $myStruct = MyStruct(name: "ABC", active: true)
-        $input2 = { completion in
+        $input2 = {
             print("hello2")
-            completion()
+        }
+        $input6 = { stateHandler in
+            stateHandler(.success(true))
         }
     }
     
@@ -72,7 +92,7 @@ class ViewModel: ViewModelProtocol {
         return data
     }
     
-    func viewDidLoad() {
+    func viewDidLoadHanlding() {
         $isLoading = true
         MainThread(self, after: .now() + 3.0) { (self) in
             self.$isLoading = false

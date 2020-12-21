@@ -7,12 +7,13 @@
 
 import Foundation
 
+typealias EventVoid = Eventable<()>
+
 @propertyWrapper
 public class Event {
     
     public typealias Immutable = ImmutableEvent
     public typealias ActionType = Immutable.ActionType
-    public typealias CompletionType = Immutable.CompletionType
     
     public private(set) var immutable: Immutable
     
@@ -38,63 +39,52 @@ public class Event {
         }
     }
     
-    public init(_ action: @escaping ActionType = {_ in}) {
+    public init(_ action: @escaping ActionType = {}) {
         self.immutable = Immutable(action)
     }
-    
-    public func signalAll() {
-        action() { [weak self] in
-            self?.immutable.completion.forEach { $0.value() }
-        }
-    }
-    
 }
 
 public class ImmutableEvent {
     
-    public typealias ActionType = (CompletionType) -> Void
-    public typealias CompletionType = () -> Void
+    public typealias ActionType = () -> Void
     
-    lazy fileprivate var primaryKey: ObjectIdentifier = ObjectIdentifier(self)
+    private var immutableBase: ImmutableEventBase<(), ActionType>
     
-    fileprivate var action: ActionType
-    fileprivate var completion: [String: CompletionType] = [:]
-    
-    public init(_ action: @escaping ActionType = {_ in}) {
-        self.action = action
-    }
-    
-    deinit {
-        BindableDisposable.dispose(primaryKey: primaryKey)
-    }
-    
-    @discardableResult
-    public func event<O: UIControl>(_ control:O, event: UIControl.Event, _ completion: CompletionType? = nil) -> Disposable {
-        control.addTarget(self, action: #selector(valueChanged(sender:event:)), for: event)
-        let secondaryKey = "\(UInt(bitPattern: ObjectIdentifier(control)))\(event)"
-        self.completion[secondaryKey] = completion
-        return BindableDisposable(primaryKey, secondaryKey) { [weak self, weak control] in
-            guard let self = self, let control = control else { return }
-            control.removeTarget(self, action:  #selector(self.valueChanged(sender:event:)), for: event)
-            self.completion.removeValue(forKey: secondaryKey)
+    public var action: ActionType {
+        get {
+            return immutableBase.action
         }
+        set {
+            immutableBase.action = newValue
+        }
+    }
+    
+    public init(_ action: @escaping ActionType = {}) {
+        immutableBase = ImmutableEventBase<(),ActionType>(action)
+    }
+    
+    public func event<O: UIControl>(_ control:O, event: UIControl.Event) {
+        immutableBase.event(control, event: event)
     }
     
     /// valueChanged call back when UIControl value is changed
     /// - Parameter sender: changed UIControl object
-    @objc private func valueChanged(sender: UIControl, event: UIControl.Event) {
-        let secondaryKey = "\(UInt(bitPattern: ObjectIdentifier(sender)))\(event)"
-        let completion = self.completion[secondaryKey]
-        action(completion ?? { })
+    @objc fileprivate func valueChanged(sender: UIControl, event: UIControl.Event) {
+        signal()
+    }
+    
+    public func signal() {
+        immutableBase.action()
     }
 }
 
+public typealias EventObaservable<EventStateType> = Eventable<EventStateType>
+
 @propertyWrapper
-public class Eventable<EventType> {
+public class Eventable<EventStateType> {
     
-    public typealias Immutable = ImmutableEventable<EventType>
+    public typealias Immutable = ImmutableEventable<EventStateType>
     public typealias ActionType = Immutable.ActionType
-    public typealias CompletionType = Immutable.CompletionType
     
     public private(set) var immutable: Immutable
     
@@ -120,55 +110,82 @@ public class Eventable<EventType> {
         }
     }
     
-    public init(_ action: @escaping ActionType = {_ in}) {
-        self.immutable = Immutable(action)
+    public init(_ action: @escaping ActionType = {_ in}, _ eventStateValue: EventStateType? = nil) {
+        self.immutable = Immutable(action, eventStateValue)
     }
-    
-    public func signalAll() {
-        action() { [weak self] data in
-            self?.immutable.completion.forEach { $0.value(data) }
-        }
-    }
-    
 }
 
-
-public class ImmutableEventable<EventType> {
+public class ImmutableEventable<EventStateType> : ImmutableEventBase<EventStateType,((EventStateType) -> Void) -> Void> {
     
-    public typealias ActionType = (CompletionType) -> Void
-    public typealias CompletionType = (EventType) -> Void
+    public typealias ActionType = ((EventStateType) -> Void) -> Void
+    public typealias CompletionType<EventStateType> = (EventStateType) -> Void
     
-    lazy fileprivate var primaryKey: ObjectIdentifier = ObjectIdentifier(self)
-    
-    fileprivate var action: ActionType
-    fileprivate var completion: [String: CompletionType] = [:]
-    
-    public init(_ action: @escaping ActionType = {_ in}) {
-        self.action = action
-    }
-    
-    deinit {
-        BindableDisposable.dispose(primaryKey: primaryKey)
+    override init(_ action: @escaping ActionType = {_ in}, _ eventStateValue: EventStateType? = nil) {
+        super.init(action, eventStateValue)
     }
     
     @discardableResult
-    public func event<O: UIControl>(_ control:O, event: UIControl.Event, _ completion: CompletionType? = nil) -> Disposable {
+    public override func signal() -> Bindable<EventStateType>.Immutable {
+        action { [weak self] eventState in
+            self?.bindable.value = eventState
+        }
+        return asBindable
+    }
+}
+
+public class ImmutableEventBase<EventStateType, ActionType> {
+    
+    lazy fileprivate var primaryKey: ObjectIdentifier = ObjectIdentifier(self)
+    
+    fileprivate var bindable: Bindable<EventStateType>
+    
+    fileprivate var action: ActionType
+    
+    public var asBindable: Bindable<EventStateType>.Immutable {
+        return bindable.immutable
+    }
+    
+    public init(_ action: ActionType, _ eventStateValue: EventStateType? = nil) {
+        self.action = action
+        bindable = Bindable(eventStateValue)
+        if let eventStateValue = eventStateValue {
+            bindable.value = eventStateValue
+        }
+    }
+    
+    deinit {
+        DisposableBag.dispose(self)
+    }
+    
+    @discardableResult
+    public func event<O: UIControl>(_ control:O, event: UIControl.Event) -> Self {
         control.addTarget(self, action: #selector(valueChanged(sender:event:)), for: event)
         let secondaryKey = "\(UInt(bitPattern: ObjectIdentifier(control)))\(event)"
-        self.completion[secondaryKey] = completion
-        return BindableDisposable(primaryKey, secondaryKey) { [weak self, weak control] in
+        let disposableEvent = DisposableUnit(primaryKey, secondaryKey) { [weak self, weak control] in
             guard let self = self, let control = control else { return }
             control.removeTarget(self, action:  #selector(self.valueChanged(sender:event:)), for: event)
-            self.completion.removeValue(forKey: secondaryKey)
-        }
+         }
+        DisposableBag.container(self, [disposableEvent])
+        return self
+    }
+    
+    
+    
+    @discardableResult
+    public func observe(_ complection:@escaping (EventStateType) -> ()) -> Disposable {
+        return bindable.observe(complection)
     }
     
     /// valueChanged call back when UIControl value is changed
     /// - Parameter sender: changed UIControl object
-    @objc private func valueChanged(sender: UIControl, event: UIControl.Event) {
-        let secondaryKey = "\(UInt(bitPattern: ObjectIdentifier(sender)))\(event)"
-        let completion = self.completion[secondaryKey] ?? {_ in}
-        action(completion)
+    @objc fileprivate func valueChanged(sender: UIControl, event: UIControl.Event) {
+        signal()
+    }
+    
+    @discardableResult
+    public func signal() -> Bindable<EventStateType>.Immutable {
+        //*** Note this function should be overriden from any subclass to call action ***
+        return bindable.immutable
     }
 }
 

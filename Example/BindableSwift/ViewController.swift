@@ -22,15 +22,15 @@ class UserDefaultsManager: UserDefaultsManagerProtocol {
     
     // MARK:- Singleton
     
-    static let shared = UserDefaultsManager()
+    static let shared:UserDefaultsManagerProtocol = UserDefaultsManager()
     
     // MARK: Properties
     
     private let userDefaults = UserDefaults.standard
     
     private init() {
-        appVersion.bind(\String.self, to: self, \.appVersionValue)
-        isFirstTime.bind(\Bool.self, to: self, \.isFirstTimeValue)
+        appVersion.bind(to: self, \.appVersionValue)
+        isFirstTime.bind(to: self, \.isFirstTimeValue)
     }
     
     // MARK:- Properties
@@ -92,8 +92,8 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         setupView()
         bindVM()
-        
-        viewModel.viewDidLoad()
+//        let appversion = UserDefaultsManager.shared.appVersion.value
+        viewModel.viewDidLoad.signal()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -103,7 +103,7 @@ class ViewController: UIViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        BindableDisposable.dispose(self)
+        DisposableBag.dispose(self)
     }
     
     func setupView() {
@@ -121,14 +121,16 @@ class ViewController: UIViewController {
     }
     
     func bindUserDefaults() {
-        BindableDisposable.container(self, [
+        DisposableBag.container(self, [
             UserDefaultsManager.shared.appVersion.bind(\String.self, to: self, \.title, mapper: {
                 "Bindable Example \($0 ?? "")"
-            })
-        ])
-        BindableDisposable.container(self, [
+            }),
             UserDefaultsManager.shared.isFirstTime.bind(\Bool.self, to: myView.switchControl, \.isOn)
         ])
+        //...
+//        BindableDisposable.container(self, [
+//
+//        ])
     }
     
     func bindVM() {
@@ -137,39 +139,52 @@ class ViewController: UIViewController {
 //            UserDefaultsManager.shared.isFirstTime.value = false
 //        }
         
-        viewModel.isLoading.bind(\Bool.self, to: myView.loader, \.isHidden, mapper: { (isLoading) -> Bool in
-            return !isLoading
-        }, completion: { [weak self] isLoading in
+        viewModel.isLoading.bind(to: myView.loader, \.isHidden, mapper: { !$0 }, completion: { [weak self] isLoading in
             isLoading ? self?.myView.loader.startAnimating() : self?.myView.loader.stopAnimating()
         })
-        viewModel.name.bind(\String.self, to: myView.textField, \.text, mode: .towWay, completion:  { newValue in
+        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay, completion:  { newValue in
             print(newValue)
         })
-        viewModel.name.bind(\String.self, to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" })
+        viewModel.name.bind(to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" })
         
         viewModel.name.observe(\String.self) { [weak self] in
             self?.myView.switchControl.setOn($0.isEmpty, animated: true)
         }
-        viewModel.isLoading.bind(\Bool.self, to: myView, \.myEnum, mapper: { $0 ? .x : .y }) { [weak self] in
-            print($0, self?.myView.myEnum ?? "-")
-        }
+//        viewModel.isLoading.bind(to: myView, \.myEnum, mapper: { $0 ? .x : .y }) { [weak self] in
+//            print($0, self?.myView.myEnum ?? "-")
+//        }
         
-//        viewModel.myStruct.bind(\.name, to: myView.label, \.text, mapper: { $0.description })
-        //        viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { $0.isEmpty })
+        viewModel.myStruct.bind(\.name, to: myView.label, \.text, mapper: { $0.description })
+                viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { $0.isEmpty })
         
-        //        viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { [weak self] _ in
-        //            return self?.myView.switchControl.isOn ?? false
-        //        }, completion:{ [weak self] in
-        //            self?.myView.switchControl.setOn($0.isEmpty, animated: true)
-        //        })
+                viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { [weak self] _ in
+                    return self?.myView.switchControl.isOn ?? false
+                }, completion:{ [weak self] in
+                    self?.myView.switchControl.setOn($0.isEmpty, animated: true)
+                })
         
-        viewModel.data.observe(\[CellViewModelProtocol].self) { [weak self] _ in
+        viewModel.data.observe { [weak self] _ in
             self?.myView.tableView.reloadData()
         }
-        
-        viewModel.input2.event(myView.button, event: .touchUpInside) { [weak self] in
-            self?.navigationController?.pushViewController(ViewController.create(), animated: true)
+//
+        viewModel
+            .input6
+            .event(myView.button, event: .touchUpInside)
+            .asBindable
+            .observe { [weak self] result in
+                if let x = try? result.get() {
+                    print("vc eventStae: \(x)")
+                    self?.navigationController?.pushViewController(ViewController.create(), animated: true)
+                }
         }
+        viewModel.input.signal()
+        viewModel.input3.signal().observe { (int) in
+            print(int)
+        }
+        
+        viewModel
+            .input
+            .event(myView.button, event: .touchUpInside)
         
 //        viewModel.shouldGoToVC.observe(\Bool.self) { [weak self] in
 //            $0 ? self?.navigationController?.pushViewController(ViewController.create(), animated: true) : ()
@@ -270,16 +285,6 @@ class MyCell: UITableViewCell {
     
     func bindVM() {
         viewModel?.title.bind(\String.self, to: titleLabel, \.text)
-    }
-}
-
-class BaseCell: UITableViewCell {
-    var bindableDisposables: [BindableDisposable] = []
-    
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        bindableDisposables.forEach { $0.dispose() }
-        bindableDisposables = []
     }
 }
 
