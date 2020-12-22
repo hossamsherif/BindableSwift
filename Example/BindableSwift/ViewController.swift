@@ -93,7 +93,7 @@ class ViewController: UIViewController {
         setupView()
         bindVM()
 //        let appversion = UserDefaultsManager.shared.appVersion.value
-        viewModel.viewDidLoad.signal()
+        viewModel.viewDidLoad()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -169,22 +169,29 @@ class ViewController: UIViewController {
 //
         viewModel
             .input6
-            .event(myView.button, event: .touchUpInside)
-            .asBindable
+            .on(myView.button, event: .touchUpInside)
             .observe { [weak self] result in
-                if let x = try? result.get() {
+                do {
+                    let x = try result.get()
                     print("vc eventStae: \(x)")
                     self?.navigationController?.pushViewController(ViewController.create(), animated: true)
+                } catch MyError.boom {
+                    print(MyError.boom)
+                } catch MyError.custom(let code, let description){
+                    print(code, description)
+                } catch {
+                    print("default")
                 }
+
         }
         viewModel.input.signal()
-        viewModel.input3.signal().observe { (int) in
+        viewModel.input3().observe { (int) in
             print(int)
         }
         
         viewModel
             .input
-            .event(myView.button, event: .touchUpInside)
+            .on(myView.button, event: .touchUpInside)
         
 //        viewModel.shouldGoToVC.observe(\Bool.self) { [weak self] in
 //            $0 ? self?.navigationController?.pushViewController(ViewController.create(), animated: true) : ()

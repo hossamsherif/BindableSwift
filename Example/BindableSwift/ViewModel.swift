@@ -7,8 +7,25 @@
 
 import Foundation
 import BindableSwift
-
-typealias EventResult<T> = Eventable<Result<T, Error>>
+enum MyError: Error {
+    var code: Int {
+        switch self {
+        case .boom:
+            return 100
+        case .custom(let code, _):
+            return code
+        default:
+            return 0
+        }
+    }
+    var description:String {
+        self.localizedDescription
+    }
+    case boom
+    case custom(code: Int = 100, description:String = "booming")
+}
+typealias EventResult<T> = EventResultBase<T,Error>
+typealias EventResultBase<T, E:Error> = Eventable<Result<T, E>>
 
 struct MyStruct {
     var name:String
@@ -78,7 +95,9 @@ class ViewModel: ViewModelProtocol {
             print("hello2")
         }
         $input6 = { stateHandler in
-            stateHandler(.success(true))
+//            stateHandler(.success(true))
+//            stateHandler(.failure(NSError(domain: "error.domain", code: 101, userInfo: nil)))
+            stateHandler(.failure(MyError.custom(code: 200, description: "custom")))
         }
     }
     
