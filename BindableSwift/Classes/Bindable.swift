@@ -22,6 +22,14 @@ public enum BindMode {
     case towWay
 }
 
+/// Binding lifeTime used in Bindable
+/// .once disposed before return
+/// .always should be disposed DiposableBag (automatically or manually)
+public enum LifeTime {
+    case once
+    case always
+}
+
 /// AbstractBindable to constrain Bindable methods and property
 public protocol AbastractBindable {
     associatedtype BindingType
@@ -34,13 +42,7 @@ public protocol AbastractBindable {
     ///   - sourceKeyPath: source key path for the current bindable
     ///   - completion: completion handler called after each update from source to object
     @discardableResult
-    func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ completion: @escaping (T) -> ()) -> Disposable
-    
-    /// Observe on bindable with default sourKeyPath on BindingType
-    /// - Parameters:
-    ///   - completion: completion handler called after each update from source to object
-    @discardableResult
-    func observe(_ completion: @escaping (BindingType) -> ()) -> Disposable
+    func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ lifeTime: LifeTime, _ completion: @escaping (T) -> ()) -> Disposable
     
     /// bind an object to this bindable
     /// - Parameters:
@@ -56,39 +58,25 @@ public protocol AbastractBindable {
                                   _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                   mode: BindMode,
                                   mapper: @escaping (T) -> R,
+                                  _ lifeTime: LifeTime,
                                   completion: ((T) -> ())?) -> Disposable
-    
-    
-    /// bind an object to this bindable with default sourKeyPath on BindingType
-    /// - Parameters:
-    ///   - object: object to bind on
-    ///   - objectKeyPath: object key path
-    ///   - mode: binding mode type
-    ///   - mapper: transfomation mapper from source to object
-    ///   - completion: completion handler called after each update from source to object
-    @discardableResult
-    func bind<O: AnyObject, R>(to object: O,
-                                  _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
-                                  mode: BindMode,
-                                  mapper: @escaping (BindingType) -> R,
-                                  completion: ((BindingType) -> ())?) -> Disposable
 }
 //MARK:- Default AbastractBindable paramteres
 public extension AbastractBindable {
     
     @discardableResult
-    func observe(_ completion: @escaping (BindingType) -> ()) -> Disposable {
-        observe(\BindingType.self, completion)
+    func observe(_ lifeTime: LifeTime = .always, _ completion: @escaping (BindingType) -> ()) -> Disposable {
+        observe(\BindingType.self, lifeTime, completion)
     }
-    
     @discardableResult
     func bind<O: AnyObject, T, R>(_ sourceKeyPath: KeyPath<BindingType, T>,
                                   to object: O,
                                   _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                   mode: BindMode = .oneWay,
                                   mapper: @escaping (T) -> R = { $0 as! R },
+                                  _ lifeTime: LifeTime = .always,
                                   completion: ((T) -> ())? = nil) -> Disposable {
-        bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, completion: completion)
+        bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, lifeTime, completion: completion)
     }
     
     @discardableResult
@@ -96,8 +84,9 @@ public extension AbastractBindable {
                                   _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                   mode: BindMode = .oneWay,
                                   mapper: @escaping (BindingType) -> R = { $0 as! R },
+                                  _ lifeTime: LifeTime = .always,
                                   completion: ((BindingType) -> ())? = nil) -> Disposable {
-        bind(\BindingType.self, to: object, objectKeyPath, mode: mode, mapper: mapper, completion: completion)
+        bind(\BindingType.self, to: object, objectKeyPath, mode: mode, mapper: mapper, lifeTime, completion: completion)
     }
 }
 
@@ -159,18 +148,19 @@ public class Bindable<BindingType>: AbastractBindable {
     }
     
     @discardableResult
-    public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ completion: @escaping (T) -> ()) -> Disposable {
-        return immutable.observe(sourceKeyPath, completion)
+    public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ lifeTime:LifeTime = .always, _ completion: @escaping (T) -> ()) -> Disposable {
+        return immutable.observe(sourceKeyPath, lifeTime, completion)
     }
     
     @discardableResult
     public func bind<O: AnyObject, T, R>(_ sourceKeyPath: KeyPath<BindingType, T>,
-                                  to object: O,
-                                  _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
-                                  mode: BindMode = .oneWay,
-                                  mapper: @escaping (T) -> R = { $0 as! R },
-                                  completion: ((T) -> ())? = nil) -> Disposable {
-        return immutable.bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, completion: completion)
+                                         to object: O,
+                                         _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
+                                         mode: BindMode = .oneWay,
+                                         mapper: @escaping (T) -> R = { $0 as! R },
+                                         _ lifeTime: LifeTime = .always,
+                                         completion: ((T) -> ())? = nil) -> Disposable {
+        return immutable.bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, lifeTime, completion: completion)
     }
 }
 
@@ -219,13 +209,17 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     }
     
     @discardableResult
-    public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ completion: @escaping (T) -> ()) -> Disposable {
+    public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ lifeTime: LifeTime = .always, _ completion: @escaping (T) -> ()) -> Disposable {
         currentValue.map { completion($0[keyPath: sourceKeyPath]) }
         let secondaryKey = UUID().uuidString
-        observers[secondaryKey] = { completion($0[keyPath: sourceKeyPath]) }
-        return  DisposableUnit(primaryKey, secondaryKey) { [weak self] in
+        let disposable = DisposableUnit(primaryKey, secondaryKey) { [weak self] in
             self?.observers.removeValue(forKey: secondaryKey)
         }
+        observers[secondaryKey] = {
+            completion($0[keyPath: sourceKeyPath])
+        }
+        if lifeTime == .once { disposable.dispose() }
+        return disposable
     }
     
     /// unbind from an object
@@ -244,22 +238,27 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     
     @discardableResult
     public func bind<O: AnyObject, T, R>(_ sourceKeyPath: KeyPath<BindingType, T>,
-                                  to object: O,
-                                  _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
-                                  mode: BindMode = .oneWay,
-                                  mapper: @escaping (T) -> R = { $0 as! R },
-                                  completion: ((T) -> ())? = nil) -> Disposable {
+                                         to object: O,
+                                         _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
+                                         mode: BindMode = .oneWay,
+                                         mapper: @escaping (T) -> R = { $0 as! R },
+                                         _ lifeTime: LifeTime = .always,
+                                         completion: ((T) -> ())? = nil) -> Disposable {
         
         if mode == .towWay {
             addTowWayBinding(object, objectKeyPath)
         }
-        return addObserver(for: object, objectKeyPath) { [weak object] observed in
+        let disposable = addObserver(for: object, objectKeyPath, mode: mode) { [weak object] observed in
             guard let object = object else { return }
             let value = observed[keyPath: sourceKeyPath]
             let mapped = mapper(value)
             object[keyPath: objectKeyPath] = mapped
             completion?(value)
         }
+        if lifeTime == .once {
+            disposable .dispose()
+        }
+        return disposable
     }
     
     //MARK: Private methods

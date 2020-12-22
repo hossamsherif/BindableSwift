@@ -111,8 +111,8 @@ public class ImmutableEventBindableBase<EventStateType, ActionType> {
     }
     
     @discardableResult
-    public func observe(_ complection:@escaping (EventStateType) -> ()) -> Disposable {
-        return bindable.observe(complection)
+    public func observe(_ lifeTime:LifeTime = .always, _ complection:@escaping (EventStateType) -> ()) -> Disposable {
+        return bindable.observe(lifeTime, complection)
     }
     
     /// valueChanged call back when UIControl value is changed

@@ -84,9 +84,7 @@ class ViewController: UIViewController {
     //        }
     //    }
     
-    var data: [CellViewModelProtocol] {
-        return viewModel.data.value
-    }
+//    lazy var data = viewModel.data.value
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -121,16 +119,20 @@ class ViewController: UIViewController {
     }
     
     func bindUserDefaults() {
-        DisposableBag.container(self, [
-            UserDefaultsManager.shared.appVersion.bind(\String.self, to: self, \.title, mapper: {
-                "Bindable Example \($0 ?? "")"
-            })
-            
-        ])
-        //...
-        DisposableBag.container(self, [
-            UserDefaultsManager.shared.isFirstTime.bind(\Bool.self, to: myView.switchControl, \.isOn)
-        ])
+//        DisposableBag.container(self, [
+//            UserDefaultsManager.shared.appVersion.bind(to: self, \.title, mapper: {
+//                "Bindable Example \($0 ?? "")"
+//            })
+//        ])
+        
+        UserDefaultsManager.shared.appVersion.bind(to: self, \.title, mapper: {
+            "Bindable Example \($0 ?? "")"
+        }, .once)
+//        DisposableBag.container(self, [
+        UserDefaultsManager.shared.isFirstTime.observe(.once) { bool in 
+            print(bool)
+        }
+//        ])
     }
     
     func bindVM() {
@@ -142,10 +144,10 @@ class ViewController: UIViewController {
         viewModel.isLoading.bind(to: myView.loader, \.isHidden, mapper: { !$0 }, completion: { [weak self] isLoading in
             isLoading ? self?.myView.loader.startAnimating() : self?.myView.loader.stopAnimating()
         })
-        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay, completion:  { newValue in
+        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay,completion:  { newValue in
             print(newValue)
         })
-        viewModel.name.bind(to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" })
+        viewModel.name.bind(to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" }, .once)
         
         viewModel.name.observe(\String.self) { [weak self] in
             self?.myView.switchControl.setOn($0.isEmpty, animated: true)
@@ -154,14 +156,14 @@ class ViewController: UIViewController {
 //            print($0, self?.myView.myEnum ?? "-")
 //        }
         
-        viewModel.myStruct.bind(\.name, to: myView.label, \.text, mapper: { $0.description })
-                viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { $0.isEmpty })
+//        viewModel.myStruct.bind(\.name, to: myView.label, \.text, mapper: { $0.description })
+//        viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { $0.isEmpty })
         
-                viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { [weak self] _ in
-                    return self?.myView.switchControl.isOn ?? false
-                }, completion:{ [weak self] in
-                    self?.myView.switchControl.setOn($0.isEmpty, animated: true)
-                })
+        viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { [weak self] _ in
+            return self?.myView.switchControl.isOn ?? false
+        }, completion:{ [weak self] in
+            self?.myView.switchControl.setOn($0.isEmpty, animated: true)
+        })
         
         viewModel.data.observe { [weak self] _ in
             self?.myView.tableView.reloadData()
@@ -203,12 +205,12 @@ class ViewController: UIViewController {
 //MARK:- UITableViewDataSource
 extension ViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return data.count
+        return viewModel.data.value.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: MyCell.stringType(), for: indexPath) as! MyCell
-        let cellVM = data[indexPath.row]
+        let cellVM = viewModel.data.value[indexPath.row]
         cell.viewModel = cellVM
         cell.selectionStyle = .none
         return cell

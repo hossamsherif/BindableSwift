@@ -88,6 +88,7 @@ class ViewModel: ViewModelProtocol {
     
     init() {
         $data = generateData()
+        $name = "first"
         $myStruct = MyStruct(name: "ABC", active: true)
         $input2 = {
             print("hello2")
