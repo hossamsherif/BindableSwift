@@ -10,12 +10,14 @@ import Foundation
 
 /// Diposable protocol to dispose any logic/data
 public protocol Disposable {
+    var isDisposed: Bool { get }
     func dispose()
 }
 
 /// Diposable Unit conform to Disposable protocol for any disposable component made
 class DisposableUnit: Disposable  {
     //MARK:- Private properties
+    public var isDisposed = false
     private var keyPair: KeyPair
     fileprivate var disposeBlock:() -> ()
     
@@ -44,15 +46,16 @@ class DisposableUnit: Disposable  {
         DisposableBag.shared.container[keyPair] = self
     }
     
-//    deinit {
-//        disposeBlock()
-//    }
+    deinit {
+        disposeBlock()
+    }
     
     //MARK:- Public methods
-
     /// Dispose a Bindable instance
     public func dispose() {
         print("before: \(DisposableBag.shared.container.count)")
+        guard !isDisposed else { return }
+        isDisposed = true
         disposeBlock()
         DisposableBag.shared.remove(keyPair: keyPair)
         print("after: \(DisposableBag.shared.container.count)")
@@ -109,10 +112,11 @@ public class DisposableBag {
     @discardableResult
     public static func container(_ referenceObject: AnyObject, _ bindableDisposables:[Disposable]) -> Disposable {
         let keyPair = KeyPair(primary: ObjectIdentifier(referenceObject), secondary: "")
-        if var bindableDisposable = shared.container[keyPair] {
+        if let bindableDisposable = shared.container[keyPair] {
             let oldDisposeBlock = bindableDisposable.disposeBlock
-            bindableDisposable.disposeBlock = {
+            bindableDisposable.disposeBlock = { [weak bindableDisposable] in
                 oldDisposeBlock()
+                bindableDisposable?.isDisposed = false
                 bindableDisposables.forEach { $0.dispose() }
             }
             return bindableDisposable

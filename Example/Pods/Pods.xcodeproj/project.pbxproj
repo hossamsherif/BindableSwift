@@ -8,8 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		53CFF502CB7F6DEEA999EF4C13B894F0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */; };
-		5F10AAF6258F31F7004F1664 /* DisposableUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F10AAF5258F31F7004F1664 /* DisposableUnit.swift */; };
+		5F10AAF6258F31F7004F1664 /* DisposableBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F10AAF5258F31F7004F1664 /* DisposableBag.swift */; };
 		5F6F77AF258FB6A1000CA53D /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F6F77AE258FB6A1000CA53D /* Event.swift */; };
+		5FB9DFA12592269F0015F0D3 /* Eventable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FB9DFA02592269F0015F0D3 /* Eventable.swift */; };
 		640622A10E3BC0163D62229F1AF83CF4 /* BindableSwift-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = DB2FB9630047EB9418AFCD6B13D2036C /* BindableSwift-dummy.m */; };
 		6F1C7FBCD4A75B72E351E4F61CA28F7D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */; };
 		77DEDA5D32146F5B7A0FE1A622E7A1C7 /* Pods-BindableSwift_Example-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = E7910E20BED7FE360FDE47BA0E60A8D5 /* Pods-BindableSwift_Example-dummy.m */; };
@@ -47,8 +48,9 @@
 		4730A2C4BC4DD518A20F745C21EB301B /* Pods-BindableSwift_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-BindableSwift_Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		4A853E199FB46D47938881BC310F7303 /* Bindable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Bindable.swift; path = BindableSwift/Classes/Bindable.swift; sourceTree = "<group>"; };
 		4B4B04E9A09880650755BCADDE903B50 /* BindableSwift-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "BindableSwift-umbrella.h"; sourceTree = "<group>"; };
-		5F10AAF5258F31F7004F1664 /* DisposableUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DisposableUnit.swift; path = BindableSwift/Classes/DisposableUnit.swift; sourceTree = "<group>"; };
+		5F10AAF5258F31F7004F1664 /* DisposableBag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DisposableBag.swift; path = BindableSwift/Classes/DisposableBag.swift; sourceTree = "<group>"; };
 		5F6F77AE258FB6A1000CA53D /* Event.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Event.swift; path = BindableSwift/Classes/Event.swift; sourceTree = "<group>"; };
+		5FB9DFA02592269F0015F0D3 /* Eventable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Eventable.swift; path = BindableSwift/Classes/Eventable.swift; sourceTree = "<group>"; };
 		62D134CE219561239637ECD63201C2BB /* BindableSwift.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; path = BindableSwift.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		689052820E669ADB252500F0C5BF69A3 /* Pods-BindableSwift_Tests-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-BindableSwift_Tests-acknowledgements.plist"; sourceTree = "<group>"; };
 		6A78276C3AC666391C1C252D94BE1C2A /* Pods-BindableSwift_Tests-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-BindableSwift_Tests-dummy.m"; sourceTree = "<group>"; };
@@ -220,8 +222,9 @@
 			isa = PBXGroup;
 			children = (
 				4A853E199FB46D47938881BC310F7303 /* Bindable.swift */,
-				5F10AAF5258F31F7004F1664 /* DisposableUnit.swift */,
+				5F10AAF5258F31F7004F1664 /* DisposableBag.swift */,
 				5F6F77AE258FB6A1000CA53D /* Event.swift */,
+				5FB9DFA02592269F0015F0D3 /* Eventable.swift */,
 				B98AE7FF6C06D59A171443BE976C809C /* Pod */,
 				1789764FE288B60FC537EE8DB2A82D26 /* Support Files */,
 			);
@@ -381,9 +384,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5F10AAF6258F31F7004F1664 /* DisposableUnit.swift in Sources */,
+				5F10AAF6258F31F7004F1664 /* DisposableBag.swift in Sources */,
 				9AF8644F72137C2320A3D44171BA2281 /* Bindable.swift in Sources */,
 				640622A10E3BC0163D62229F1AF83CF4 /* BindableSwift-dummy.m in Sources */,
+				5FB9DFA12592269F0015F0D3 /* Eventable.swift in Sources */,
 				5F6F77AF258FB6A1000CA53D /* Event.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

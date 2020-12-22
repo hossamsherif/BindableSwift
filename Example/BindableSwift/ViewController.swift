@@ -124,13 +124,13 @@ class ViewController: UIViewController {
         DisposableBag.container(self, [
             UserDefaultsManager.shared.appVersion.bind(\String.self, to: self, \.title, mapper: {
                 "Bindable Example \($0 ?? "")"
-            }),
-            UserDefaultsManager.shared.isFirstTime.bind(\Bool.self, to: myView.switchControl, \.isOn)
+            })
+            
         ])
         //...
-//        BindableDisposable.container(self, [
-//
-//        ])
+        DisposableBag.container(self, [
+            UserDefaultsManager.shared.isFirstTime.bind(\Bool.self, to: myView.switchControl, \.isOn)
+        ])
     }
     
     func bindVM() {
@@ -169,7 +169,8 @@ class ViewController: UIViewController {
 //
         viewModel
             .input6
-            .on(myView.button, event: .touchUpInside)
+            .on(myView.button, for: .touchUpInside)
+            .asBindable
             .observe { [weak self] result in
                 do {
                     let x = try result.get()
@@ -191,7 +192,7 @@ class ViewController: UIViewController {
         
         viewModel
             .input
-            .on(myView.button, event: .touchUpInside)
+            .on(myView.button, for: .touchUpInside)
         
 //        viewModel.shouldGoToVC.observe(\Bool.self) { [weak self] in
 //            $0 ? self?.navigationController?.pushViewController(ViewController.create(), animated: true) : ()

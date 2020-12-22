@@ -14,8 +14,6 @@ enum MyError: Error {
             return 100
         case .custom(let code, _):
             return code
-        default:
-            return 0
         }
     }
     var description:String {
@@ -75,7 +73,7 @@ class ViewModel: ViewModelProtocol {
         self?.$shouldGoToVC = true
         stateHandler(.success(()))
     }).immutable
-    lazy var viewDidLoad = Event(viewDidLoadHanlding).immutable
+    lazy var viewDidLoad = Event { [weak self] in self?.viewDidLoadHanlding() }.immutable
     
     @Bindable<Bool>(false) var shouldGoToVC
     @Bindable<Bool>(false) var isLoading
@@ -95,9 +93,9 @@ class ViewModel: ViewModelProtocol {
             print("hello2")
         }
         $input6 = { stateHandler in
-//            stateHandler(.success(true))
+            stateHandler(.success(true))
 //            stateHandler(.failure(NSError(domain: "error.domain", code: 101, userInfo: nil)))
-            stateHandler(.failure(MyError.custom(code: 200, description: "custom")))
+//            stateHandler(.failure(MyError.custom(code: 200, description: "custom")))
         }
     }
     
