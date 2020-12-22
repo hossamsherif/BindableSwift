@@ -126,9 +126,11 @@ class ViewController: UIViewController {
         ])
 
         DisposableBag.container(self, [
-            UserDefaultsManager.shared.isFirstTime.observe(.once) { bool in
-                print(bool)
-            }
+            UserDefaultsManager.shared.isFirstTime
+                .ObserveOn {
+                    print(">>>>>>", $0)
+                }.once
+                .resolve()
         ])
     }
     
@@ -141,10 +143,16 @@ class ViewController: UIViewController {
         viewModel.isLoading.bind(to: myView.loader, \.isHidden, mapper: { !$0 }, completion: { [weak self] isLoading in
             isLoading ? self?.myView.loader.startAnimating() : self?.myView.loader.stopAnimating()
         })
-        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay, .times(4),completion:  { newValue in
+        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay, .always,completion:  { newValue in
             print(newValue)
         })
-        viewModel.name.bind(to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" }, .once)
+//        viewModel.name.bind(to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" }, .once)
+        viewModel.name
+            .bindOn(myView.label, \.text)
+            .map { $0.isEmpty ? "" : "Mr. \($0)" }
+            .always
+            .resolve()
+            
         
         viewModel.name.observe(\String.self) { [weak self] in
             self?.myView.switchControl.setOn($0.isEmpty, animated: true)

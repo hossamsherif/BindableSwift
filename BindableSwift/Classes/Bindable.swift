@@ -163,6 +163,23 @@ public class Bindable<BindingType>: AbastractBindable {
         }
     }
     
+    //MARK:- Builder methods
+    public func ObserveOn(_ completion:@escaping (BindingType) -> ()) -> BindableBuilder<BindingType, BindingType, AnyObject, Any> {
+        return ObserveOn(\BindingType.self, completion)
+    }
+    
+    public func ObserveOn<T, O:AnyObject>(_ sourceKeyPath: KeyPath<BindingType, T>, _ completion:@escaping (T) -> ()) -> BindableBuilder<BindingType, T, O, Any> {
+        return immutable.ObserveOn(sourceKeyPath, completion)
+    }
+    
+    public func bindOn<O:AnyObject, R>(_ object: O, _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, BindingType, O, R> {
+        return bindOn(\BindingType.self, object, objectKeyPath)
+    }
+    
+    public func bindOn<T, O:AnyObject, R>(_ sourceKeyPath: KeyPath<BindingType, T>, _ object: O, _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, T, O, R> {
+        return immutable.bindOn(sourceKeyPath, object, objectKeyPath)
+    }
+    
     @discardableResult
     public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ lifeTime:LifeTime = .always, _ completion: @escaping (T) -> ()) -> Disposable {
         return immutable.observe(sourceKeyPath, lifeTime, completion)
@@ -178,6 +195,81 @@ public class Bindable<BindingType>: AbastractBindable {
                                          completion: ((T) -> ())? = nil) -> Disposable {
         return immutable.bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, lifeTime, completion: completion)
     }
+}
+public class BindableBuilder<BindingType,T, O:AnyObject, R> {
+    enum BuilderType {
+        case bind
+        case observe
+    }
+    var type: BuilderType
+    var sourceKeyPath: KeyPath<BindingType, T>?
+    var object: O?
+    var objectKeyPath: ReferenceWritableKeyPath<O, R>?
+    var mode: BindMode = .oneWay
+    var map:  ((T) -> R)?
+    var lifeTime: LifeTime = .always
+    var completion: ((T) -> ())? = nil
+    
+    private weak var bindable: ImmutableBindable<BindingType>?
+    required init(_ bindable: ImmutableBindable<BindingType>, type:BuilderType) {
+        self.bindable = bindable
+        self.type = type
+    }
+    
+    //MARK: mode
+    public var oneWay: Self {
+        self.mode = .oneWay
+        return self
+    }
+    public var towWay: Self {
+        self.mode = .towWay
+        return self
+    }
+    //MARK: lifeTime
+    public var once: Self {
+        self.lifeTime = .once
+        return self
+    }
+    public var always: Self {
+        self.lifeTime = .always
+        return self
+    }
+    public func times(_ time:Int) -> Self {
+        self.lifeTime = .times(time)
+        return self
+    }
+    //MARK: map
+    public func map(_ map: @escaping (T) -> R) -> Self {
+        self.map = map
+        return self
+    }
+    //MARK: completion
+    @discardableResult
+    public func completion(_ completion: ((T) -> ())?) -> Self {
+        self.completion = completion
+        return self
+    }
+    
+    @discardableResult
+    public func resolve() -> Disposable {
+        switch type {
+        case .bind:
+            return bindable!.bind(sourceKeyPath!,
+                                 to: object!,
+                                 objectKeyPath!,
+                                 mode: mode,
+                                 mapper: map!,
+                                 lifeTime,
+                                 completion: completion)
+        case .observe:
+            return bindable!.observe(sourceKeyPath!,
+                                     lifeTime,
+                                     completion!)
+        }
+        
+    }
+    
+    
 }
 
 /// Immutable representation of bindable object
@@ -210,6 +302,29 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
         }
     }
     
+    //MARK:- Builder methods
+    public func ObserveOn(_ completion:@escaping (BindingType) -> ()) -> BindableBuilder<BindingType, BindingType, AnyObject, Any> {
+        return ObserveOn(\BindingType.self, completion)
+    }
+    
+    public func ObserveOn<T, O:AnyObject>(_ sourceKeyPath: KeyPath<BindingType, T>,_ completion:@escaping (T) -> ()) -> BindableBuilder<BindingType, T, O, Any> {
+        let builder = BindableBuilder<BindingType, T, O, Any>(self, type: .observe)
+        builder.sourceKeyPath = sourceKeyPath
+        builder.completion(completion)
+        return builder
+    }
+    
+    public func bindOn<O:AnyObject, R>(_ object: O, _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, BindingType, O, R> {
+        return bindOn(\BindingType.self, object, objectKeyPath)
+    }
+    
+    public func bindOn<T, O:AnyObject, R>(_ sourceKeyPath: KeyPath<BindingType, T>, _ object: O, _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, T, O, R> {
+        let builder = BindableBuilder<BindingType, T, O, R>(self, type: .bind)
+        builder.sourceKeyPath = sourceKeyPath
+        builder.object = object
+        builder.objectKeyPath = objectKeyPath
+        return builder
+    }
     //MARK: Methods
     
     /// Main init for BindableImmutable<BindingType>
