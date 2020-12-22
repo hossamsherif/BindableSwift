@@ -20,7 +20,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window.rootViewController = UINavigationController(rootViewController:  ViewController.create())
         window.makeKeyAndVisible()
         self.window = window
-        
+//        return true
         MainThread(self, after: .now() + 10) { (self) in
             self.window?.rootViewController = UINavigationController(rootViewController: ViewController.create())
 //            self.window?.rootViewController = UINavigationController(rootViewController: UIViewController())

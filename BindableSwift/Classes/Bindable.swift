@@ -23,11 +23,23 @@ public enum BindMode {
 }
 
 /// Binding lifeTime used in Bindable
-/// .once disposed before return
+/// .once disposed after one observation
+/// .times(_ time: Int) dispose after number of `time` observation
 /// .always should be disposed DiposableBag (automatically or manually)
 public enum LifeTime {
     case once
+    case times(_ time:Int)
     case always
+    
+    mutating func tik() -> Bool {
+        switch self {
+        case .once: return true
+        case .times(let time):
+            self = .times(time-1)
+            return time <= 0
+        case .always: return false
+        }
+    }
 }
 
 /// AbstractBindable to constrain Bindable methods and property
@@ -219,9 +231,10 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
         let disposable = DisposableUnit(primaryKey, secondaryKey) { [weak self] in
             self?.observers.removeValue(forKey: secondaryKey)
         }
+        var currentLifeTime = lifeTime
         observers[secondaryKey] = { [weak disposable] in
             completion($0[keyPath: sourceKeyPath])
-            if lifeTime == .once { disposable?.dispose() }
+            if currentLifeTime.tik() { disposable?.dispose() }
         }
         return disposable
     }
@@ -303,9 +316,10 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
             guard let object = object, let objectKeyPath = objectKeyPath else { return }
             self?.unbind(from: object, objectKeyPath, mode: mode)
         }
+        var currentLifeTime = lifeTime
         observers[secondaryKey] = { [weak disposable] in
             completion($0)
-            if lifeTime == .once { disposable?.dispose() }
+            if currentLifeTime.tik() { disposable?.dispose() }
         }
         return disposable
     }

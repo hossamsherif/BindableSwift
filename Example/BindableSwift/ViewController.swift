@@ -141,7 +141,7 @@ class ViewController: UIViewController {
         viewModel.isLoading.bind(to: myView.loader, \.isHidden, mapper: { !$0 }, completion: { [weak self] isLoading in
             isLoading ? self?.myView.loader.startAnimating() : self?.myView.loader.stopAnimating()
         })
-        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay,completion:  { newValue in
+        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay, .times(4),completion:  { newValue in
             print(newValue)
         })
         viewModel.name.bind(to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" }, .once)
