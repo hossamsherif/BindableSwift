@@ -7,7 +7,8 @@
 
 import Foundation
 
-typealias EventVoid = Eventable<()>
+public typealias Eventable<EventStateType> = EventBindable<EventStateType>
+public typealias ImmutableEventable<EventStateType> = ImmutableEventBindable<EventStateType>
 
 @propertyWrapper
 public class Event {
@@ -63,8 +64,8 @@ public class ImmutableEvent {
         immutableBase = ImmutableEventBase<(),ActionType>(action)
     }
     
-    public func event<O: UIControl>(_ control:O, event: UIControl.Event) {
-        immutableBase.event(control, event: event)
+    public func on<O: UIControl>(_ control:O, event: UIControl.Event) {
+        immutableBase.on(control, event: event)
     }
     
     /// valueChanged call back when UIControl value is changed
@@ -73,15 +74,19 @@ public class ImmutableEvent {
         signal()
     }
     
+    public func callAsFunction() {
+        signal()
+    }
+    
     public func signal() {
         immutableBase.action()
     }
 }
 
-public typealias EventObaservable<EventStateType> = Eventable<EventStateType>
+
 
 @propertyWrapper
-public class Eventable<EventStateType> {
+public class EventBindable<EventStateType> {
     
     public typealias Immutable = ImmutableEventable<EventStateType>
     public typealias ActionType = Immutable.ActionType
@@ -115,10 +120,14 @@ public class Eventable<EventStateType> {
     }
 }
 
-public class ImmutableEventable<EventStateType> : ImmutableEventBase<EventStateType,((EventStateType) -> Void) -> Void> {
+public class ImmutableEventBindable<EventStateType> : ImmutableEventBase<EventStateType,((EventStateType) -> Void) -> Void> {
     
     public typealias ActionType = ((EventStateType) -> Void) -> Void
     public typealias CompletionType<EventStateType> = (EventStateType) -> Void
+    
+    public func callAsFunction() -> Bindable<EventStateType>.Immutable {
+        return signal()
+    }
     
     override init(_ action: @escaping ActionType = {_ in}, _ eventStateValue: EventStateType? = nil) {
         super.init(action, eventStateValue)
@@ -158,7 +167,7 @@ public class ImmutableEventBase<EventStateType, ActionType> {
     }
     
     @discardableResult
-    public func event<O: UIControl>(_ control:O, event: UIControl.Event) -> Self {
+    public func on<O: UIControl>(_ control:O, event: UIControl.Event) -> Self {
         control.addTarget(self, action: #selector(valueChanged(sender:event:)), for: event)
         let secondaryKey = "\(UInt(bitPattern: ObjectIdentifier(control)))\(event)"
         let disposableEvent = DisposableUnit(primaryKey, secondaryKey) { [weak self, weak control] in
