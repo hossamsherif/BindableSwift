@@ -119,20 +119,17 @@ class ViewController: UIViewController {
     }
     
     func bindUserDefaults() {
-//        DisposableBag.container(self, [
-//            UserDefaultsManager.shared.appVersion.bind(to: self, \.title, mapper: {
-//                "Bindable Example \($0 ?? "")"
-//            })
-//        ])
-        
-        UserDefaultsManager.shared.appVersion.bind(to: self, \.title, mapper: {
-            "Bindable Example \($0 ?? "")"
-        }, .once)
-//        DisposableBag.container(self, [
-        UserDefaultsManager.shared.isFirstTime.observe(.once) { bool in 
-            print(bool)
-        }
-//        ])
+        DisposableBag.container(self, [
+            UserDefaultsManager.shared.appVersion.bind(to: self, \.title, mapper: {
+                "Bindable Example \($0 ?? "")"
+            })
+        ])
+
+        DisposableBag.container(self, [
+            UserDefaultsManager.shared.isFirstTime.observe(.once) { bool in
+                print(bool)
+            }
+        ])
     }
     
     func bindVM() {

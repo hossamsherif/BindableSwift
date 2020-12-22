@@ -40,18 +40,22 @@ public protocol AbastractBindable {
     /// Observe on bindable
     /// - Parameters:
     ///   - sourceKeyPath: source key path for the current bindable
+    ///   - lifeTime: binding life time - default: .always
     ///   - completion: completion handler called after each update from source to object
     @discardableResult
-    func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ lifeTime: LifeTime, _ completion: @escaping (T) -> ()) -> Disposable
+    func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>,
+                    _ lifeTime: LifeTime,
+                    _ completion: @escaping (T) -> ()) -> Disposable
     
     /// bind an object to this bindable
     /// - Parameters:
-    ///   - sourceKeyPath: source key path for the current bindable
+    ///   - sourceKeyPath: source key path for the current bindable - default: \BindingType.self
     ///   - object: object to bind on
     ///   - objectKeyPath: object key path
-    ///   - mode: binding mode type
+    ///   - mode: binding mode type - default: .onWay
     ///   - mapper: transfomation mapper from source to object
-    ///   - completion: completion handler called after each update from source to object
+    ///   - lifeTime: binding life time - default: .always
+    ///   - completion: completion handler called after each update from source to object - default: nil
     @discardableResult
     func bind<O: AnyObject, T, R>(_ sourceKeyPath: KeyPath<BindingType, T>,
                                   to object: O,
@@ -215,10 +219,10 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
         let disposable = DisposableUnit(primaryKey, secondaryKey) { [weak self] in
             self?.observers.removeValue(forKey: secondaryKey)
         }
-        observers[secondaryKey] = {
+        observers[secondaryKey] = { [weak disposable] in
             completion($0[keyPath: sourceKeyPath])
+            if lifeTime == .once { disposable?.dispose() }
         }
-        if lifeTime == .once { disposable.dispose() }
         return disposable
     }
     
@@ -248,17 +252,13 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
         if mode == .towWay {
             addTowWayBinding(object, objectKeyPath)
         }
-        let disposable = addObserver(for: object, objectKeyPath, mode: mode) { [weak object] observed in
+        return addObserver(for: object, objectKeyPath, mode, lifeTime) { [weak object] observed in
             guard let object = object else { return }
             let value = observed[keyPath: sourceKeyPath]
             let mapped = mapper(value)
             object[keyPath: objectKeyPath] = mapped
             completion?(value)
         }
-        if lifeTime == .once {
-            disposable .dispose()
-        }
-        return disposable
     }
     
     //MARK: Private methods
@@ -291,18 +291,23 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     ///   - completion: completion handler to be called when value is changed
     private func addObserver<O: AnyObject, R>(for object: O,
                                               _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
-                                              mode: BindMode = .oneWay,
+                                              _ mode: BindMode = .oneWay,
+                                              _ lifeTime: LifeTime = .always,
                                               completion: @escaping (BindingType) -> Void) -> Disposable {
         let secondaryKey = getObserverHash(object, objectKeyPath)
         //Dipose previous binding from object/objectKeyPath pair
         DisposableBag.dispose(secondaryKey: secondaryKey)
         //Invoke completion for initial value (if any)
         currentValue.map { completion($0) }
-        observers[secondaryKey] = { completion($0) }
-        return DisposableUnit(primaryKey, secondaryKey) { [weak self, weak object, weak objectKeyPath] in
+        let disposable =  DisposableUnit(primaryKey, secondaryKey) { [weak self, weak object, weak objectKeyPath] in
             guard let object = object, let objectKeyPath = objectKeyPath else { return }
             self?.unbind(from: object, objectKeyPath, mode: mode)
         }
+        observers[secondaryKey] = { [weak disposable] in
+            completion($0)
+            if lifeTime == .once { disposable?.dispose() }
+        }
+        return disposable
     }
     
     
