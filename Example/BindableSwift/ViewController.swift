@@ -84,13 +84,17 @@ class ViewController: UIViewController {
     //        }
     //    }
     
-//    lazy var data = viewModel.data.value
+    var data:[CellViewModelProtocol] {
+        return viewModel.data.value ?? []
+    }
+    var names:[String] = []
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
         bindVM()
-//        let appversion = UserDefaultsManager.shared.appVersion.value
+        //        let appversion = UserDefaultsManager.shared.appVersion.value
         viewModel.viewDidLoad()
     }
     
@@ -124,45 +128,75 @@ class ViewController: UIViewController {
                 "Bindable Example \($0 ?? "")"
             })
         ])
-
+        
         DisposableBag.container(self, [
             UserDefaultsManager.shared.isFirstTime
-                .ObserveOn {
+                .observeOn
+                .once
+                .done {
                     print(">>>>>>", $0)
-                }.once
-                .resolve()
+                }
         ])
     }
     
     func bindVM() {
-        
-//        if UserDefaultsManager.shared.isFirstTime.value {
-//            UserDefaultsManager.shared.isFirstTime.value = false
-//        }
+        //        if UserDefaultsManager.shared.isFirstTime.value {
+        //            UserDefaultsManager.shared.isFirstTime.value = false
+        //        }
         
         viewModel.isLoading.bind(to: myView.loader, \.isHidden, mapper: { !$0 }, completion: { [weak self] isLoading in
             isLoading ? self?.myView.loader.startAnimating() : self?.myView.loader.stopAnimating()
         })
-        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay, .always,completion:  { newValue in
-            print(newValue)
-        })
-//        viewModel.name.bind(to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" }, .once)
+//        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay, .always,completion:  { newValue in
+//            print(newValue)
+//        })
+//        viewModel
+//            .input3
+//            .on(myView.button, for: .touchUpInside)
+//            .asBindable
+//            .bind(to: myView.textField, \.text, mode: .towWay)
+//        viewModel
+//            .input3
+//            .observe { [weak self] in
+//                self?.myView.switchControl.setOn($0.count%2==0, animated: true)
+//            }
+//        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay)
+//        viewModel.numberOnlyValidator.on(myView.textField, for: .editingChanged)
+//
+
+        
+        viewModel
+            .input3
+            .asBindable
+            .bind(to: myView.switchControl, \.isOn, mode: .oneWay, mapper: { $0.count%2==0 })
+        
+
+        
+        //        viewModel.name.bind(to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" }, .once)
         viewModel.name
             .bindOn(myView.label, \.text)
             .map { $0.isEmpty ? "" : "Mr. \($0)" }
             .always
-            .resolve()
-            
+            .done()
         
-        viewModel.name.observe(\String.self) { [weak self] in
-            self?.myView.switchControl.setOn($0.isEmpty, animated: true)
-        }
-//        viewModel.isLoading.bind(to: myView, \.myEnum, mapper: { $0 ? .x : .y }) { [weak self] in
-//            print($0, self?.myView.myEnum ?? "-")
+        viewModel.name
+            .observeOn
+//            .map { $0.isEmpty ? "" : "Mr. \($0)" }
+            .always
+            .done {
+                print($0)
+            }
+        
+        
+//        viewModel.name.observe(\String.self) { [weak self] in
+//            self?.myView.switchControl.setOn($0.isEmpty, animated: true)
 //        }
+        //        viewModel.isLoading.bind(to: myView, \.myEnum, mapper: { $0 ? .x : .y }) { [weak self] in
+        //            print($0, self?.myView.myEnum ?? "-")
+        //        }
         
-//        viewModel.myStruct.bind(\.name, to: myView.label, \.text, mapper: { $0.description })
-//        viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { $0.isEmpty })
+        //        viewModel.myStruct.bind(\.name, to: myView.label, \.text, mapper: { $0.description })
+        //        viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { $0.isEmpty })
         
         viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { [weak self] _ in
             return self?.myView.switchControl.isOn ?? false
@@ -173,49 +207,63 @@ class ViewController: UIViewController {
         viewModel.data.observe { [weak self] _ in
             self?.myView.tableView.reloadData()
         }
-//
-        viewModel
-            .input6
-            .on(myView.button, for: .touchUpInside)
-            .asBindable
-            .observe { [weak self] result in
-                do {
-                    let x = try result.get()
-                    print("vc eventStae: \(x)")
-                    self?.navigationController?.pushViewController(ViewController.create(), animated: true)
-                } catch MyError.boom {
-                    print(MyError.boom)
-                } catch MyError.custom(let code, let description){
-                    print(code, description)
-                } catch {
-                    print("default")
-                }
-
-        }
-        viewModel.input.signal()
-        viewModel.input3().observe { (int) in
-            print(int)
+        
+        viewModel.data
+            .bind(to: self, \.names, mapper: { $0.compactMap { $0.title.value } }) {
+                print($0)
+            }
+        
+        myView.button.addAction { sender in
+            print("cool action: \(sender.titleLabel?.text ?? "")")
         }
         
-        viewModel
-            .input
-            .on(myView.button, for: .touchUpInside)
+        myView.button.actionEvent.asBindable.observe {
+            print("cool event: \($0.titleLabel?.text ?? "")")
+        }
         
-//        viewModel.shouldGoToVC.observe(\Bool.self) { [weak self] in
-//            $0 ? self?.navigationController?.pushViewController(ViewController.create(), animated: true) : ()
-//        }
+//            .bind(self, \.names, mapper: { $0.compactMap { $0.title.value } })
+        //
+        //        viewModel
+        //            .input6
+        //            .on(myView.button, for: .touchUpInside)
+        //            .asBindable
+        //            .observe { [weak self] result in
+        //                do {
+        //                    let x = try result.get()
+        //                    print("vc eventStae: \(x)")
+        //                    self?.navigationController?.pushViewController(ViewController.create(), animated: true)
+        //                } catch MyError.boom {
+        //                    print(MyError.boom)
+        //                } catch MyError.custom(let code, let description){
+        //                    print(code, description)
+        //                } catch {
+        //                    print("default")
+        //                }
+        //            }
+        //        viewModel.input.signal()
+        //        viewModel.input3().observe { (int) in
+        //            print(int)
+        //        }
+        
+        //        viewModel
+        //            .input
+        //            .on(myView.button, for: .touchUpInside)
+        
+        //        viewModel.shouldGoToVC.observe(\Bool.self) { [weak self] in
+        //            $0 ? self?.navigationController?.pushViewController(ViewController.create(), animated: true) : ()
+        //        }
     }
 }
 
 //MARK:- UITableViewDataSource
 extension ViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.data.value.count
+        return data.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: MyCell.stringType(), for: indexPath) as! MyCell
-        let cellVM = viewModel.data.value[indexPath.row]
+        let cellVM = data[indexPath.row]
         cell.viewModel = cellVM
         cell.selectionStyle = .none
         return cell
@@ -230,8 +278,8 @@ class MyView: UIView {
     
     var myEnum:MyEnum = .x
     
-    let button = { () -> UIButton in
-        let button = UIButton(type: .system)
+    let button = { () -> UIActionableButton in
+        let button = UIActionableButton(type: .system)
         button.setTitle("Let's go", for: .normal)
         return button
     }()
@@ -241,8 +289,8 @@ class MyView: UIView {
         label.heightAnchor.constraint(greaterThanOrEqualToConstant: 21.0).isActive = true
         return label
     }()
-    let textField = { () -> UITextField in
-        let textField = UITextField()
+    let textField = { () -> UnsignedNumberTF in
+        let textField = UnsignedNumberTF()
         textField.borderStyle = .roundedRect
         textField.textContentType = .name
         return textField

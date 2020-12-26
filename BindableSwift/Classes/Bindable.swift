@@ -8,25 +8,17 @@
 import UIKit
 import Foundation
 
-/// Common transformation helper used on bind mehtod of bindable
-public enum BindableMapper {
-    static let boolToString: (Bool) -> String = String.init(_:)
-    static let floatToString: (Float) -> String = String.init(_:)
-    static let doubleToString: (Double) -> String = String.init(_:)
-    static let intToString: (Int) -> String = String.init(_:)
-}
-
 /// Binding mode used in Bindable
 public enum BindMode {
     case oneWay
     case towWay
 }
 
-/// Binding lifeTime used in Bindable
+/// Binding span used in Bindable
 /// .once disposed after one observation
 /// .times(_ time: Int) dispose after number of `time` observation
 /// .always should be disposed DiposableBag (automatically or manually)
-public enum LifeTime {
+public enum Span {
     case once
     case times(_ time:Int)
     case always
@@ -47,16 +39,16 @@ public protocol AbastractBindable {
     associatedtype BindingType
     
     /// Current value
-    var value:BindingType { get }
+    var value: BindingType? { get }
     
     /// Observe on bindable
     /// - Parameters:
     ///   - sourceKeyPath: source key path for the current bindable
-    ///   - lifeTime: binding life time - default: .always
+    ///   - span: binding life time - default: .always
     ///   - completion: completion handler called after each update from source to object
     @discardableResult
     func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>,
-                    _ lifeTime: LifeTime,
+                    _ span: Span,
                     _ completion: @escaping (T) -> ()) -> Disposable
     
     /// bind an object to this bindable
@@ -66,7 +58,7 @@ public protocol AbastractBindable {
     ///   - objectKeyPath: object key path
     ///   - mode: binding mode type - default: .onWay
     ///   - mapper: transfomation mapper from source to object
-    ///   - lifeTime: binding life time - default: .always
+    ///   - span: binding life time - default: .always
     ///   - completion: completion handler called after each update from source to object - default: nil
     @discardableResult
     func bind<O: AnyObject, T, R>(_ sourceKeyPath: KeyPath<BindingType, T>,
@@ -74,15 +66,28 @@ public protocol AbastractBindable {
                                   _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                   mode: BindMode,
                                   mapper: @escaping (T) -> R,
-                                  _ lifeTime: LifeTime,
+                                  _ span: Span,
                                   completion: ((T) -> ())?) -> Disposable
+    
+    
+    /// Return a new Bindable builder
+    /// - Parameters:
+    ///   - sourceKeyPath: source key path for the current bindable - default: \BindingType.self
+    ///   - object: object to bind on
+    ///   - objectKeyPath: object key path
+    func bindOn<T, O:AnyObject, R>(_ sourceKeyPath: KeyPath<BindingType, T>,
+                                          _ object: O, _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, T, O, R>
+    
+    /// Return a new Observable builder
+    ///   - sourceKeyPath: source key path for the current bindable
+    func observeOn<T>(_ sourceKeyPath: KeyPath<BindingType, T>) -> ObservableBuilder<BindingType, T>
 }
 //MARK:- Default AbastractBindable paramteres
 public extension AbastractBindable {
     
     @discardableResult
-    func observe(_ lifeTime: LifeTime = .always, _ completion: @escaping (BindingType) -> ()) -> Disposable {
-        observe(\BindingType.self, lifeTime, completion)
+    func observe(_ span: Span = .always, _ completion: @escaping (BindingType) -> ()) -> Disposable {
+        observe(\BindingType.self, span, completion)
     }
     @discardableResult
     func bind<O: AnyObject, T, R>(_ sourceKeyPath: KeyPath<BindingType, T>,
@@ -90,19 +95,28 @@ public extension AbastractBindable {
                                   _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                   mode: BindMode = .oneWay,
                                   mapper: @escaping (T) -> R = { $0 as! R },
-                                  _ lifeTime: LifeTime = .always,
+                                  _ span: Span = .always,
                                   completion: ((T) -> ())? = nil) -> Disposable {
-        bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, lifeTime, completion: completion)
+        bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, span, completion: completion)
     }
     
     @discardableResult
     func bind<O: AnyObject, R>(to object: O,
-                                  _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
-                                  mode: BindMode = .oneWay,
-                                  mapper: @escaping (BindingType) -> R = { $0 as! R },
-                                  _ lifeTime: LifeTime = .always,
-                                  completion: ((BindingType) -> ())? = nil) -> Disposable {
-        bind(\BindingType.self, to: object, objectKeyPath, mode: mode, mapper: mapper, lifeTime, completion: completion)
+                               _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
+                               mode: BindMode = .oneWay,
+                               mapper: @escaping (BindingType) -> R = { $0 as! R },
+                               _ span: Span = .always,
+                               completion: ((BindingType) -> ())? = nil) -> Disposable {
+        bind(\BindingType.self, to: object, objectKeyPath, mode: mode, mapper: mapper, span, completion: completion)
+    }
+    
+    func bindOn<O:AnyObject, R>(_ object: O,
+                                _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, BindingType, O, R> {
+        return bindOn(\BindingType.self, object, objectKeyPath)
+    }
+    
+    var observeOn: ObservableBuilder<BindingType, BindingType> {
+        return observeOn(\BindingType.self)
     }
 }
 
@@ -136,40 +150,37 @@ public class Bindable<BindingType>: AbastractBindable {
     }
     
     /// represent current value and changes to this property will publish updated value to all observers
-    public var value:BindingType {
+    public var value:BindingType? {
         get {
-            /*
-             * Note:
-             * If you try to directly unwrap currentValue it will crash with Optional BindingType.
-             * Contional casting on the other hand can have optional outcome with nil value in it.
-             */
-            return immutable.currentValue as! BindingType
+            return immutable.currentValue
         }
-        set {
-            lock.lock(); defer{lock.unlock()}
-            immutable.currentValue = newValue
-            immutable.observers.forEach{ $1(newValue) }
-        }
+    }
+    
+    public func update(_ newValue:BindingType) {
+        lock.lock(); defer{lock.unlock()}
+        immutable.currentValue = newValue
+        immutable.observers.forEach{ $1(newValue) }
     }
     
     /// projectedValue from @propertyWrapper to easily access value from Bindable instance
     /// While mantaing exported value property for ImmutableBindable
     public var projectedValue: BindingType {
         get {
-            return value
+            /*
+             * Note:
+             * If you try to directly unwrap currentValue it will crash with Optional BindingType.
+             * Contional casting on the other hand can have optional outcome with nil value in it.
+             */
+            return value as! BindingType
         }
         set {
-            value = newValue
+            update(newValue)
         }
     }
     
     //MARK:- Builder methods
-    public func ObserveOn(_ completion:@escaping (BindingType) -> ()) -> BindableBuilder<BindingType, BindingType, AnyObject, Any> {
-        return ObserveOn(\BindingType.self, completion)
-    }
-    
-    public func ObserveOn<T, O:AnyObject>(_ sourceKeyPath: KeyPath<BindingType, T>, _ completion:@escaping (T) -> ()) -> BindableBuilder<BindingType, T, O, Any> {
-        return immutable.ObserveOn(sourceKeyPath, completion)
+    public func observeOn<T>(_ sourceKeyPath: KeyPath<BindingType, T>) -> ObservableBuilder<BindingType, T> {
+        return immutable.observeOn(sourceKeyPath)
     }
     
     public func bindOn<O:AnyObject, R>(_ object: O, _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, BindingType, O, R> {
@@ -181,8 +192,8 @@ public class Bindable<BindingType>: AbastractBindable {
     }
     
     @discardableResult
-    public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ lifeTime:LifeTime = .always, _ completion: @escaping (T) -> ()) -> Disposable {
-        return immutable.observe(sourceKeyPath, lifeTime, completion)
+    public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ span:Span = .always, _ completion: @escaping (T) -> ()) -> Disposable {
+        return immutable.observe(sourceKeyPath, span, completion)
     }
     
     @discardableResult
@@ -191,29 +202,55 @@ public class Bindable<BindingType>: AbastractBindable {
                                          _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                          mode: BindMode = .oneWay,
                                          mapper: @escaping (T) -> R = { $0 as! R },
-                                         _ lifeTime: LifeTime = .always,
+                                         _ span: Span = .always,
                                          completion: ((T) -> ())? = nil) -> Disposable {
-        return immutable.bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, lifeTime, completion: completion)
+        return immutable.bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, span, completion: completion)
     }
-}
-public class BindableBuilder<BindingType,T, O:AnyObject, R> {
-    enum BuilderType {
-        case bind
-        case observe
-    }
-    var type: BuilderType
-    var sourceKeyPath: KeyPath<BindingType, T>?
-    var object: O?
-    var objectKeyPath: ReferenceWritableKeyPath<O, R>?
-    var mode: BindMode = .oneWay
-    var map:  ((T) -> R)?
-    var lifeTime: LifeTime = .always
-    var completion: ((T) -> ())? = nil
     
-    private weak var bindable: ImmutableBindable<BindingType>?
-    required init(_ bindable: ImmutableBindable<BindingType>, type:BuilderType) {
+}
+
+public class ObservableBuilder<BindingType,T> {
+    //MARK: Properties
+    fileprivate var sourceKeyPath: KeyPath<BindingType, T>?
+    fileprivate var span: Span = .always
+    fileprivate weak var bindable: ImmutableBindable<BindingType>?
+    
+    required init(_ bindable: ImmutableBindable<BindingType>) {
         self.bindable = bindable
-        self.type = type
+    }
+    
+    //MARK: span
+    public var once: Self {
+        self.span = .once
+        return self
+    }
+    public var always: Self {
+        self.span = .always
+        return self
+    }
+    public func times(_ time:Int) -> Self {
+        self.span = .times(time)
+        return self
+    }
+    //MARK: Build
+    @discardableResult
+    public func done(_ handler: @escaping (T) -> ()) -> Disposable {
+        return bindable!.observe(sourceKeyPath!,
+                                 span,
+                                 handler)
+    }
+    
+}
+public class BindableBuilder<BindingType,T, O:AnyObject, R>: ObservableBuilder<BindingType,T> {
+    //MARK: Properties
+    fileprivate var object: O?
+    fileprivate var objectKeyPath: ReferenceWritableKeyPath<O, R>?
+    fileprivate var mode: BindMode = .oneWay
+    fileprivate var map:  ((T) -> R)?
+    fileprivate var completion: ((T) -> ())? = nil
+    
+    required init(_ bindable: ImmutableBindable<BindingType>) {
+        super.init(bindable)
     }
     
     //MARK: mode
@@ -225,51 +262,23 @@ public class BindableBuilder<BindingType,T, O:AnyObject, R> {
         self.mode = .towWay
         return self
     }
-    //MARK: lifeTime
-    public var once: Self {
-        self.lifeTime = .once
-        return self
-    }
-    public var always: Self {
-        self.lifeTime = .always
-        return self
-    }
-    public func times(_ time:Int) -> Self {
-        self.lifeTime = .times(time)
-        return self
-    }
     //MARK: map
     public func map(_ map: @escaping (T) -> R) -> Self {
         self.map = map
         return self
     }
-    //MARK: completion
+    //MARK: Build
     @discardableResult
-    public func completion(_ completion: ((T) -> ())?) -> Self {
-        self.completion = completion
-        return self
+    public override func done(_ handler: ((T) -> ())? = nil) -> Disposable {
+        self.completion = handler
+        return bindable!.bind(sourceKeyPath!,
+                              to: object!,
+                              objectKeyPath!,
+                              mode: mode,
+                              mapper: map ?? { $0 as! R },
+                              span,
+                              completion: completion)
     }
-    
-    @discardableResult
-    public func resolve() -> Disposable {
-        switch type {
-        case .bind:
-            return bindable!.bind(sourceKeyPath!,
-                                 to: object!,
-                                 objectKeyPath!,
-                                 mode: mode,
-                                 mapper: map!,
-                                 lifeTime,
-                                 completion: completion)
-        case .observe:
-            return bindable!.observe(sourceKeyPath!,
-                                     lifeTime,
-                                     completion!)
-        }
-        
-    }
-    
-    
 }
 
 /// Immutable representation of bindable object
@@ -286,40 +295,35 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     /// current keyPath for the observer object used in .towWay BindingMode
     private var keyPath: AnyKeyPath?
     
+    private var sourceKeyPath: AnyKeyPath?
+    
     //Current ImmutableBindable primaryKey used with DisposabkeBag
     lazy fileprivate var primaryKey: ObjectIdentifier = ObjectIdentifier(self)
     
     //MARK: Properties
     /// Current value
-    public var value:BindingType {
+    public var value:BindingType? {
         get {
-            /*
-             * Note:
-             * If you try to directly unwrap currentValue it will crash with Optional BindingType.
-             * Contional casting on the other hand can have optional outcome with nil value in it.
-             */
-            return currentValue as! BindingType
+            return currentValue
         }
     }
     
     //MARK:- Builder methods
-    public func ObserveOn(_ completion:@escaping (BindingType) -> ()) -> BindableBuilder<BindingType, BindingType, AnyObject, Any> {
-        return ObserveOn(\BindingType.self, completion)
-    }
     
-    public func ObserveOn<T, O:AnyObject>(_ sourceKeyPath: KeyPath<BindingType, T>,_ completion:@escaping (T) -> ()) -> BindableBuilder<BindingType, T, O, Any> {
-        let builder = BindableBuilder<BindingType, T, O, Any>(self, type: .observe)
+    public func observeOn<T>(_ sourceKeyPath: KeyPath<BindingType, T>) -> ObservableBuilder<BindingType, T> {
+        let builder = ObservableBuilder<BindingType, T>(self)
         builder.sourceKeyPath = sourceKeyPath
-        builder.completion(completion)
         return builder
     }
     
-    public func bindOn<O:AnyObject, R>(_ object: O, _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, BindingType, O, R> {
+    public func bindOn<O:AnyObject, R>(_ object: O,
+                                       _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, BindingType, O, R> {
         return bindOn(\BindingType.self, object, objectKeyPath)
     }
     
-    public func bindOn<T, O:AnyObject, R>(_ sourceKeyPath: KeyPath<BindingType, T>, _ object: O, _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, T, O, R> {
-        let builder = BindableBuilder<BindingType, T, O, R>(self, type: .bind)
+    public func bindOn<T, O:AnyObject, R>(_ sourceKeyPath: KeyPath<BindingType, T>,
+                                          _ object: O, _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, T, O, R> {
+        let builder = BindableBuilder<BindingType, T, O, R>(self)
         builder.sourceKeyPath = sourceKeyPath
         builder.object = object
         builder.objectKeyPath = objectKeyPath
@@ -340,16 +344,18 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     }
     
     @discardableResult
-    public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ lifeTime: LifeTime = .always, _ completion: @escaping (T) -> ()) -> Disposable {
+    public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>,
+                           _ span: Span = .always,
+                           _ completion: @escaping (T) -> ()) -> Disposable {
         currentValue.map { completion($0[keyPath: sourceKeyPath]) }
         let secondaryKey = UUID().uuidString
         let disposable = DisposableUnit(primaryKey, secondaryKey) { [weak self] in
             self?.observers.removeValue(forKey: secondaryKey)
         }
-        var currentLifeTime = lifeTime
+        var currentSpan = span
         observers[secondaryKey] = { [weak disposable] in
             completion($0[keyPath: sourceKeyPath])
-            if currentLifeTime.tik() { disposable?.dispose() }
+            if currentSpan.tik() { disposable?.dispose() }
         }
         return disposable
     }
@@ -374,13 +380,13 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
                                          _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                          mode: BindMode = .oneWay,
                                          mapper: @escaping (T) -> R = { $0 as! R },
-                                         _ lifeTime: LifeTime = .always,
+                                         _ span: Span = .always,
                                          completion: ((T) -> ())? = nil) -> Disposable {
         
         if mode == .towWay {
             addTowWayBinding(object, objectKeyPath)
         }
-        return addObserver(for: object, objectKeyPath, mode, lifeTime) { [weak object] observed in
+        return addObserver(for: object, objectKeyPath, mode, span) { [weak object] observed in
             guard let object = object else { return }
             let value = observed[keyPath: sourceKeyPath]
             let mapped = mapper(value)
@@ -420,7 +426,7 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     private func addObserver<O: AnyObject, R>(for object: O,
                                               _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                               _ mode: BindMode = .oneWay,
-                                              _ lifeTime: LifeTime = .always,
+                                              _ span: Span = .always,
                                               completion: @escaping (BindingType) -> Void) -> Disposable {
         let secondaryKey = getObserverHash(object, objectKeyPath)
         //Dipose previous binding from object/objectKeyPath pair
@@ -431,10 +437,10 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
             guard let object = object, let objectKeyPath = objectKeyPath else { return }
             self?.unbind(from: object, objectKeyPath, mode: mode)
         }
-        var currentLifeTime = lifeTime
+        var currentSpan = span
         observers[secondaryKey] = { [weak disposable] in
             completion($0)
-            if currentLifeTime.tik() { disposable?.dispose() }
+            if currentSpan.tik() { disposable?.dispose() }
         }
         return disposable
     }

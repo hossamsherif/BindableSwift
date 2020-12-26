@@ -230,7 +230,7 @@ class BindaleTests: XCTestCase {
         XCTAssertEqual(target.text, provider.$sut)
         target.text = "edit test"
         //Simulate textView text did change from keyboard
-        NotificationCenter.default.post(name: .UITextViewTextDidChange, object: target)
+        NotificationCenter.default.post(name: UITextView.textDidChangeNotification, object: target)
         XCTAssertEqual(provider.$sut, target.text)
     }
     

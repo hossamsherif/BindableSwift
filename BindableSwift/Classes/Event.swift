@@ -16,6 +16,7 @@ public protocol Signallable {
 public protocol CallableAsFunction {
     associatedtype ReturnType
     ///Call on instance directly
+    @discardableResult
     func callAsFunction() -> ReturnType
 }
 
@@ -25,12 +26,12 @@ protocol Onable: class {
 extension Onable {
     func on<O: UIControl>(selector:Selector, _ control:O, for event: UIControl.Event) {
         control.addTarget(self, action: selector, for: event)
-            let primaryKey: ObjectIdentifier = ObjectIdentifier(self)
-            let secondaryKey = "\(UInt(bitPattern: ObjectIdentifier(control)))\(event)"
-            let disposableEvent = DisposableUnit(primaryKey, secondaryKey) { [weak self, weak control] in
-                guard let self = self, let control = control else { return }
-                control.removeTarget(self, action:  selector, for: event)
-             }
+        let primaryKey: ObjectIdentifier = ObjectIdentifier(self)
+        let secondaryKey = "\(UInt(bitPattern: ObjectIdentifier(control)))\(event)"
+        let disposableEvent = DisposableUnit(primaryKey, secondaryKey) { [weak self, weak control] in
+            guard let self = self, let control = control else { return }
+            control.removeTarget(self, action:  selector, for: event)
+        }
         DisposableBag.container(self, [disposableEvent])
         
     }
@@ -40,6 +41,7 @@ extension Onable {
 public protocol CallableAsFunctionEvent: Signallable, CallableAsFunction { }
 
 extension CallableAsFunctionEvent {
+    @discardableResult
     public func callAsFunction() -> ReturnType {
         return signal()
     }

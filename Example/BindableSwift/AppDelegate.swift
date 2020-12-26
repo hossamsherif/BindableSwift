@@ -14,22 +14,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        UserDefaultsManager.shared.appVersion.value = "1.0"
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        UserDefaultsManager.shared.appVersion.update("1.0")
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.rootViewController = UINavigationController(rootViewController:  ViewController.create())
         window.makeKeyAndVisible()
         self.window = window
-//        return true
+        return true
         MainThread(self, after: .now() + 10) { (self) in
             self.window?.rootViewController = UINavigationController(rootViewController: ViewController.create())
 //            self.window?.rootViewController = UINavigationController(rootViewController: UIViewController())
-            UserDefaultsManager.shared.appVersion.value = "2.0"
+            UserDefaultsManager.shared.appVersion.update("2.0")
         }
         MainThread(self, after: .now() + 16) { (self) in
 //            self.window?.rootViewController = UINavigationController(rootViewController: ViewController.create())
             self.window?.rootViewController = UINavigationController(rootViewController: UIViewController())
-            UserDefaultsManager.shared.appVersion.value = "2.0"
+            UserDefaultsManager.shared.appVersion.update("2.0")
         }
         return true
     }

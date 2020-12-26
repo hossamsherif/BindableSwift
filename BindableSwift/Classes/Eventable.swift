@@ -39,9 +39,10 @@ public class EventBindable<EventStateType> {
     /// - Parameters:
     ///   - action: action block that should be called when signalled or `on(_:f,or:_)`'s event is fired
     ///   - eventStateValue: The associated value for the ImmutableEventable
-    public init(_ action: @escaping ActionType = {_ in}, _ eventStateValue: EventStateType? = nil) {
-        self.immutable = Immutable(action, eventStateValue)
+    public init(value: EventStateType? = nil, _ action: @escaping ActionType = {_ in}) {
+        self.immutable = Immutable(value, action)
     }
+    
 }
 /// ImmutableEventBindable type with associated bindable of value of type EventStateType
 /// Can be:
@@ -59,14 +60,14 @@ public class ImmutableEventBindable<EventStateType> : ImmutableEventableBase<Eve
     /// - Parameters:
     ///   - action: action block that should be called when signalled or `on(_:f,or:_)`'s event is fired
     ///   - eventStateValue: The associated value for this ImmutableEvent's Bindable
-    override init(_ action: @escaping ActionType = {_ in}, _ eventStateValue: EventStateType? = nil) {
-        super.init(action, eventStateValue)
+    override public init(_ eventStateValue: EventStateType? = nil, _ action: @escaping ActionType = {_ in}) {
+        super.init(eventStateValue, action)
     }
     
     @discardableResult
     public override func signal() -> ImmutableBindable {
         action { [weak self] eventState in
-            self?.bindable.value = eventState
+            self?.bindable.update(eventState)
         }
         return asBindable
     }
@@ -92,11 +93,11 @@ public class ImmutableEventBindableBase<EventStateType, ActionType> {
     
     public var asBindable: ImmutableBindable { return bindable.immutable }
     
-    public init(_ action: ActionType, _ eventStateValue: EventStateType? = nil) {
+    public init(_ eventStateValue: EventStateType? = nil, _ action: ActionType) {
         self.action = action
         bindable = Bindable(eventStateValue)
         if let eventStateValue = eventStateValue {
-            bindable.value = eventStateValue
+            bindable.update(eventStateValue)
         }
     }
     
@@ -111,8 +112,8 @@ public class ImmutableEventBindableBase<EventStateType, ActionType> {
     }
     
     @discardableResult
-    public func observe(_ lifeTime:LifeTime = .always, _ complection:@escaping (EventStateType) -> ()) -> Disposable {
-        return bindable.observe(lifeTime, complection)
+    public func observe(_ span:Span = .always, _ complection:@escaping (EventStateType) -> ()) -> Disposable {
+        return bindable.observe(span, complection)
     }
     
     /// valueChanged call back when UIControl value is changed

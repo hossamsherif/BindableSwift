@@ -33,7 +33,7 @@ struct MyStruct {
 protocol ViewModelProtocol: class {
     var input: Event.Immutable { get }
     var input2: Event.Immutable { get }
-    var input3: Eventable<Int>.Immutable { get }
+    var input3: Eventable<String>.Immutable { get }
     var input4: Eventable<()>.Immutable { get }
     var input5: Eventable<(name: String, active: Bool)>.Immutable { get }
     var input6: EventResult<Bool>.Immutable { get }
@@ -48,6 +48,7 @@ protocol ViewModelProtocol: class {
     var viewDidLoad: Event.Immutable { get }
     
     
+    var numberOnlyValidator: Event.Immutable { get }
     var name: Bindable<String>.Immutable { get }
 }
 
@@ -57,10 +58,8 @@ class ViewModel: ViewModelProtocol {
         print("hello")
     }.immutable
     @Event var input2
-    lazy var input3 = Eventable<Int> { [weak self] stateHandler in
-        self?.printHello(3)
-        stateHandler(3)
-    }.immutable
+    var i:Int  = 0
+    @Eventable<String> var input3
     lazy var input4 = Eventable<()>({ [weak self] stateHandler in
         self?.printHello(4)
         self?.$shouldGoToVC = true
@@ -83,12 +82,12 @@ class ViewModel: ViewModelProtocol {
     
     
     
-    
+    @Event var numberOnlyValidator
     @Bindable<String> var name
     
     init() {
         $data = generateData()
-        $name = "first"
+//        $name = "first"
         $myStruct = MyStruct(name: "ABC", active: true)
         $input2 = {
             print("hello2")
@@ -97,6 +96,20 @@ class ViewModel: ViewModelProtocol {
             stateHandler(.success(true))
 //            stateHandler(.failure(NSError(domain: "error.domain", code: 101, userInfo: nil)))
 //            stateHandler(.failure(MyError.custom(code: 200, description: "custom")))
+        }
+        let input3State = self.input3.asBindable
+        $input3 = { [weak input3State] stateHandler in
+            var value = input3State?.value ?? ""
+            if value.last == "$" {
+                value.removeLast()
+            }
+            stateHandler(value)
+        }
+        $numberOnlyValidator = { [weak self] in
+            guard let self = self, let lastChar = self.$name.last else { return }
+            if !lastChar.isNumber {
+                print(self.$name.removeLast())
+            }
         }
     }
     
@@ -140,7 +153,7 @@ protocol CellViewModelProtocol: class {
 class CellViewMode: CellViewModelProtocol {
     @Bindable<String> var title
     init(title:String) {
-        _title.value = title
+        _title.update(title)
     }
     init(title: Bindable<String>) {
         _title = title
