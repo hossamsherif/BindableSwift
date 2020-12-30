@@ -112,7 +112,7 @@ class BindaleTests: XCTestCase {
     func testBindOneWayUILabel() {
         let provider = BindableProvider<String>(value: "")
         let target = UILabel()
-        provider.sut.bind(\String.self, to: target, \.text)
+        provider.sut.bind(to: target, \.text)
         provider.$sut = "test"
         XCTAssertEqual(target.text, provider.$sut)
     }
@@ -166,7 +166,7 @@ class BindaleTests: XCTestCase {
     func testBindTowWayUISwitch() {
         let provider = BindableProvider<Bool>(value: false)
         let target = UISwitch()
-        provider.sut.bind(\Bool.self, to: target, \.isOn, mode: .towWay)
+        provider.sut.bind(to: target, \.isOn, mode: .towWay)
         provider.$sut = true
         XCTAssertEqual(target.isOn, provider.$sut)
         target.isOn = false
@@ -177,7 +177,7 @@ class BindaleTests: XCTestCase {
     func testBindTowWayUISegmentedControl() {
         let provider = BindableProvider<Int>(value: 0)
         let target = UISegmentedControl(items: ["A", "B"])
-        provider.sut.bind(\Int.self, to: target, \.selectedSegmentIndex, mode: .towWay)
+        provider.sut.bind(to: target, \.selectedSegmentIndex, mode: .towWay)
         provider.$sut = 1
         XCTAssertEqual(target.selectedSegmentIndex, provider.$sut)
         target.selectedSegmentIndex = 0
@@ -189,7 +189,7 @@ class BindaleTests: XCTestCase {
         let provider = BindableProvider<Int>(value: 0)
         let target = UIPageControl()
         target.numberOfPages = 2
-        provider.sut.bind(\Int.self, to: target, \.currentPage, mode: .towWay)
+        provider.sut.bind(to: target, \.currentPage, mode: .towWay)
         provider.$sut = 1
         XCTAssertEqual(target.currentPage, provider.$sut)
         target.currentPage = 0
@@ -202,7 +202,7 @@ class BindaleTests: XCTestCase {
         let target = UISlider()
         target.minimumValue = 0.0
         target.maximumValue = 100.0
-        provider.sut.bind(\Float.self, to: target, \.value, mode: .towWay)
+        provider.sut.bind(to: target, \.value, mode: .towWay)
         provider.$sut = Float(50.0)
         XCTAssertEqual(target.value, provider.$sut)
         target.value = 100.0
@@ -214,7 +214,7 @@ class BindaleTests: XCTestCase {
         let provider = BindableProvider<Date?>()
         let target = UIDatePicker()
         target.datePickerMode = .date
-        provider.sut.bind(\Date.self, to: target, \.date, mode: .towWay)
+        provider.sut.bind(to: target, \.date, mode: .towWay)
         provider.$sut = Date()
         XCTAssertEqual(target.date, provider.$sut)
         target.date = Date(timeInterval: 24*60*60, since: Date())
@@ -225,7 +225,7 @@ class BindaleTests: XCTestCase {
     func testBindTowWayUITextView() {
         let provider = BindableProvider<String>(value: "")
         let target = UITextView()
-        provider.sut.bind(\String.self, to: target, \.text, mode: .towWay)
+        provider.sut.bind(to: target, \.text, mode: .towWay)
         provider.$sut = "test"
         XCTAssertEqual(target.text, provider.$sut)
         target.text = "edit test"
@@ -234,6 +234,140 @@ class BindaleTests: XCTestCase {
         XCTAssertEqual(provider.$sut, target.text)
     }
     
+    //MARK:- Test .observe
+    
+    func testObserve() {
+        let provider = BindableProvider<String>(value: "")
+        var target = "test"
+        provider.sut.observe {
+            target = $0
+        }
+        let testValue = "change test"
+        provider.$sut = testValue
+        XCTAssertEqual(target, testValue)
+    }
+    
+    func testObserveOnce() {
+        let provider = BindableProvider<String>(value: "")
+        var target = "test"
+        provider.sut.observe(.once) {
+            target = $0
+        }
+        let testValue = "change test"
+        provider.$sut = testValue
+        XCTAssertEqual(target, testValue)
+        let testValue2 = "change test 2"
+        provider.$sut = testValue2
+        XCTAssertEqual(target, testValue)
+    }
+    
+    func testObserveTimes() {
+        let provider = BindableProvider<String>(value: "")
+        var target = "test"
+        provider.sut.observe(.times(2)) {
+            target = $0
+        }
+        let testValue = "change test"
+        provider.$sut = testValue
+        XCTAssertEqual(target, testValue)
+        let testValue2 = "change test 2"
+        provider.$sut = testValue2
+        XCTAssertEqual(target, testValue2)
+        let testValue3 = "change test 3"
+        provider.$sut = testValue3
+        XCTAssertEqual(target, testValue2)
+    }
+    
+    //MARK:- Test bindOn builder
+    
+    func testBindOn() {
+        let provider = BindableProvider<String>(value: "")
+        let target = Binder("")
+        provider.sut.bindOn(target, \.value).done()
+        let testValue = "test"
+        provider.$sut = testValue
+        XCTAssertEqual(target.value, testValue)
+    }
+    
+    func testBindOnOnce() {
+        let provider = BindableProvider<String>(value: "")
+        let target = Binder("test")
+        provider.sut
+            .bindOn(target, \.value)
+            .once
+            .done()
+        let testValue = "test"
+        provider.$sut = testValue
+        XCTAssertEqual(target.value, testValue)
+        let testValue2 = "test 2"
+        provider.$sut = testValue2
+        XCTAssertEqual(target.value, testValue)
+    }
+    
+    func testBindOnTimes() {
+        let provider = BindableProvider<String>(value: "")
+        let target = Binder("")
+        provider.sut
+            .bindOn(target, \.value)
+            .times(2)
+            .done()
+        let testValue = "change test"
+        provider.$sut = testValue
+        XCTAssertEqual(target.value, testValue)
+        let testValue2 = "change test 2"
+        provider.$sut = testValue2
+        XCTAssertEqual(target.value, testValue2)
+        let testValue3 = "change test 3"
+        provider.$sut = testValue3
+        XCTAssertEqual(target.value, testValue2)
+    }
+    
+    func testBindOnAlways() {
+        let provider = BindableProvider<String>(value: "")
+        let target = Binder("")
+        provider.sut
+            .bindOn(target, \.value)
+            .always
+            .done()
+        let testValue = "change test"
+        provider.$sut = testValue
+        XCTAssertEqual(target.value, testValue)
+        let testValue2 = "change test 2"
+        provider.$sut = testValue2
+        XCTAssertEqual(target.value, testValue2)
+        let testValue3 = "change test 3"
+        provider.$sut = testValue3
+        XCTAssertEqual(target.value, testValue3)
+    }
+    
+    func testBindOnMap() {
+        let provider = BindableProvider<String>(value: "")
+        let target = Binder(false)
+        provider.sut
+            .bindOn(target, \.value)
+            .map { $0.isEmpty }
+            .done()
+        let testValue = "change test"
+        provider.$sut = testValue
+        XCTAssertEqual(target.value, false)
+        let testValue2 = ""
+        provider.$sut = testValue2
+        XCTAssertEqual(target.value, true)
+    }
+    
+    func testBindOnOneWay() {
+        let provider = BindableProvider<String>(value: "")
+        let target = UITextField()
+        provider.sut
+            .bindOn(target, \.text)
+            .oneWay
+            .done()
+        let testValue = "test"
+        provider.$sut = testValue
+        XCTAssertEqual(target.text, testValue)
+        target.text = ""
+        XCTAssertEqual(provider.$sut, testValue)
+    }
     
 }
 

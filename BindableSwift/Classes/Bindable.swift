@@ -28,7 +28,7 @@ public enum Span {
         case .once: return true
         case .times(let time):
             self = .times(time-1)
-            return time <= 0
+            return time <= 1
         case .always: return false
         }
     }
