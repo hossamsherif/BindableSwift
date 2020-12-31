@@ -5,14 +5,6 @@ import XCTest
 
 class BindaleTests: XCTestCase {
     
-    override func setUp() {
-        super.setUp()
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-    }
-    
     //MARK:- Test .bind oneWay
     
     func testBindOneWayWithDefaultParams () {
@@ -367,6 +359,80 @@ class BindaleTests: XCTestCase {
         XCTAssertEqual(target.text, testValue)
         target.text = ""
         XCTAssertEqual(provider.$sut, testValue)
+    }
+    
+    func testBindOnTowWay() {
+        let provider = BindableProvider<String>(value: "")
+        let target = UITextField()
+        provider.sut
+            .bindOn(target, \.text)
+            .towWay
+            .done()
+        let testValue = "test"
+        provider.$sut = testValue
+        XCTAssertEqual(target.text, testValue)
+        target.text = ""
+        target.sendActions(for: .editingChanged)
+        XCTAssertEqual(provider.$sut, target.text)
+    }
+    
+    func testObserveOn() {
+        let provider = BindableProvider<String>(value: "")
+        var target = "test"
+        provider.sut.observeOn.done {
+            target = $0
+        }
+        let testValue = "change test"
+        provider.$sut = testValue
+        XCTAssertEqual(target, testValue)
+    }
+    
+    func testObserveOnOnce() {
+        let provider = BindableProvider<String>(value: "")
+        var target = "test"
+        provider.sut.observeOn.once.done {
+            target = $0
+        }
+        let testValue = "change test"
+        provider.$sut = testValue
+        XCTAssertEqual(target, testValue)
+        let testValue2 = "change test 2"
+        provider.$sut = testValue2
+        XCTAssertEqual(target, testValue)
+    }
+    
+    func testObserveOnTimes() {
+        let provider = BindableProvider<String>(value: "")
+        var target = "test"
+        provider.sut.observeOn.times(2).done {
+            target = $0
+        }
+        let testValue = "change test"
+        provider.$sut = testValue
+        XCTAssertEqual(target, testValue)
+        let testValue2 = "change test 2"
+        provider.$sut = testValue2
+        XCTAssertEqual(target, testValue2)
+        let testValue3 = "change test 3"
+        provider.$sut = testValue3
+        XCTAssertEqual(target, testValue2)
+    }
+    
+    func testObserveOnAlways() {
+        let provider = BindableProvider<String>(value: "")
+        var target = "test"
+        provider.sut.observeOn.always.done {
+            target = $0
+        }
+        let testValue = "change test"
+        provider.$sut = testValue
+        XCTAssertEqual(target, testValue)
+        let testValue2 = "change test 2"
+        provider.$sut = testValue2
+        XCTAssertEqual(target, testValue2)
+        let testValue3 = "change test 3"
+        provider.$sut = testValue3
+        XCTAssertEqual(target, testValue3)
     }
     
 }

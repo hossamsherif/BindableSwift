@@ -13,6 +13,8 @@
 		5F972773259722180020B1A3 /* UnsignedNumberTF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F972772259722180020B1A3 /* UnsignedNumberTF.swift */; };
 		5F97277725972CF40020B1A3 /* UIActionableButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F97277625972CF40020B1A3 /* UIActionableButton.swift */; };
 		5F97277B259731B50020B1A3 /* BSScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F97277A259731B50020B1A3 /* BSScrollView.swift */; };
+		5FA1724A259E4F1D00F218F0 /* EventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FA17249259E4F1D00F218F0 /* EventTests.swift */; };
+		5FA17250259E545E00F218F0 /* EventableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FA1724F259E545E00F218F0 /* EventableTests.swift */; };
 		607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD51AFB9204008FA782 /* AppDelegate.swift */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
 		607FACEC1AFB9204008FA782 /* BindaleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* BindaleTests.swift */; };
@@ -38,6 +40,8 @@
 		5F972772259722180020B1A3 /* UnsignedNumberTF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnsignedNumberTF.swift; sourceTree = "<group>"; };
 		5F97277625972CF40020B1A3 /* UIActionableButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIActionableButton.swift; sourceTree = "<group>"; };
 		5F97277A259731B50020B1A3 /* BSScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BSScrollView.swift; sourceTree = "<group>"; };
+		5FA17249259E4F1D00F218F0 /* EventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventTests.swift; sourceTree = "<group>"; };
+		5FA1724F259E545E00F218F0 /* EventableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventableTests.swift; sourceTree = "<group>"; };
 		607FACD01AFB9204008FA782 /* BindableSwift_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BindableSwift_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		607FACD41AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		607FACD51AFB9204008FA782 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -150,6 +154,8 @@
 			isa = PBXGroup;
 			children = (
 				607FACEB1AFB9204008FA782 /* BindaleTests.swift */,
+				5FA17249259E4F1D00F218F0 /* EventTests.swift */,
+				5FA1724F259E545E00F218F0 /* EventableTests.swift */,
 				607FACE91AFB9204008FA782 /* Supporting Files */,
 			);
 			path = Tests;
@@ -356,6 +362,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5FA1724A259E4F1D00F218F0 /* EventTests.swift in Sources */,
+				5FA17250259E545E00F218F0 /* EventableTests.swift in Sources */,
 				607FACEC1AFB9204008FA782 /* BindaleTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
