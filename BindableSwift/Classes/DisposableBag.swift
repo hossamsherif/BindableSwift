@@ -19,6 +19,7 @@ class DisposableUnit: Disposable  {
     //MARK:- Private properties
     public var isDisposed = false
     private var keyPair: KeyPair
+    private var disposableBag: DisposableBag!
     fileprivate var disposeBlock:() -> ()
     
     //MARK:- Internal initializer
@@ -29,10 +30,14 @@ class DisposableUnit: Disposable  {
     ///   - secondaryKey: secondaryKey of BindableDisposable object
     ///   - disposeBlock: disposeBlock to be fired on dispose
     /// - Returns: BindableDisposable instance
-    init(_ primaryKey:ObjectIdentifier, _ secondaryKey:String, _ disposeBlock: @escaping () -> ()) {
+    init(_ primaryKey:ObjectIdentifier,
+         _ secondaryKey:String,
+         disposableBag: DisposableBag = DisposableBag.shared,
+         _ disposeBlock: @escaping () -> ()) {
         self.disposeBlock = disposeBlock
         self.keyPair = KeyPair(primary: primaryKey, secondary: secondaryKey)
-        DisposableBag.shared.set(primaryKey, secondaryKey, value: self)
+        self.disposableBag = disposableBag
+        self.disposableBag.set(primaryKey, secondaryKey, value: self)
     }
     
     /// BindableDisposable init
@@ -40,25 +45,28 @@ class DisposableUnit: Disposable  {
     ///   - keyPair: keyPair for BindableDisposable object
     ///   - disposeBlock: disposeBlock to be fired on dispose
     /// - Returns: BindableDisposable instance
-    init( _ keyPair: KeyPair,_ disposeBlock: @escaping () -> ()) {
+    init( _ keyPair: KeyPair,
+          disposableBag: DisposableBag = DisposableBag.shared,
+          _ disposeBlock: @escaping () -> ()) {
         self.disposeBlock = disposeBlock
         self.keyPair = keyPair
-        DisposableBag.shared.container[keyPair] = self
+        self.disposableBag = disposableBag
+        self.disposableBag.container[keyPair] = self
     }
     
     deinit {
-        disposeBlock()
+        dispose()
     }
     
     //MARK:- Public methods
     /// Dispose a Bindable instance
     public func dispose() {
-        print("before: \(DisposableBag.shared.container.count)")
+        print("before: \(disposableBag.container.count)")
         guard !isDisposed else { return }
         isDisposed = true
         disposeBlock()
-        DisposableBag.shared.remove(keyPair: keyPair)
-        print("after: \(DisposableBag.shared.container.count)")
+        disposableBag.remove(keyPair: keyPair)
+        print("after: \(disposableBag.container.count)")
     }
 
 }
@@ -79,7 +87,7 @@ public class DisposableBag {
     
     //MARK:- singleton
     
-    fileprivate static let shared = DisposableBag()
+    static let shared = DisposableBag()
     
     fileprivate init() {}
     

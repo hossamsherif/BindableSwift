@@ -7,7 +7,6 @@
 //
 
 import XCTest
-
 @testable import BindableSwift
 
 class EventableTests: XCTestCase {

@@ -87,14 +87,12 @@ class ViewController: UIViewController {
     var data:[CellViewModelProtocol] {
         return viewModel.data.value ?? []
     }
-    var names:[String] = []
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
         bindVM()
-        //        let appversion = UserDefaultsManager.shared.appVersion.value
         viewModel.viewDidLoad()
     }
     
@@ -208,18 +206,13 @@ class ViewController: UIViewController {
             self?.myView.tableView.reloadData()
         }
         
-        viewModel.data
-            .bind(to: self, \.names, mapper: { $0.compactMap { $0.title.value } }) {
-                print($0)
-            }
-        
-        myView.button.addAction { sender in
-            print("cool action: \(sender.titleLabel?.text ?? "")")
-        }
-        
-        myView.button.actionEvent.asBindable.observe {
-            print("cool event: \($0.titleLabel?.text ?? "")")
-        }
+//        myView.button.addAction { sender in
+//            print("cool action: \(sender.titleLabel?.text ?? "")")
+//        }
+//
+//        myView.button.actionEvent.asBindable.observe {
+//            print("cool event: \($0.titleLabel?.text ?? "")")
+//        }
         
 //            .bind(self, \.names, mapper: { $0.compactMap { $0.title.value } })
         //
@@ -245,9 +238,9 @@ class ViewController: UIViewController {
         //            print(int)
         //        }
         
-        //        viewModel
-        //            .input
-        //            .on(myView.button, for: .touchUpInside)
+        viewModel
+            .input
+            .on(myView.button, for: .touchUpInside)
         
         //        viewModel.shouldGoToVC.observe(\Bool.self) { [weak self] in
         //            $0 ? self?.navigationController?.pushViewController(ViewController.create(), animated: true) : ()
@@ -278,8 +271,8 @@ class MyView: UIView {
     
     var myEnum:MyEnum = .x
     
-    let button = { () -> UIActionableButton in
-        let button = UIActionableButton(type: .system)
+    let button = { () -> UIButton in
+        let button = UIButton(type: .system)
         button.setTitle("Let's go", for: .normal)
         return button
     }()

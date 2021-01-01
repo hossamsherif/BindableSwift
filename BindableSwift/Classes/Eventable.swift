@@ -53,7 +53,7 @@ public class EventBindable<EventStateType> {
 public class ImmutableEventBindable<EventStateType> : ImmutableEventableBase<EventStateType,ImmutableEventBindable.ActionType> {
     
     public typealias ImmutableBindable = Bindable<EventStateType>.Immutable
-    public typealias ActionType = ((EventStateType) -> Void) -> Void
+    public typealias ActionType = (@escaping (EventStateType) -> Void) -> Void
     public typealias CompletionType<EventStateType> = (EventStateType) -> Void
     
     /// Default Init for ImmutableEventable
