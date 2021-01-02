@@ -10,15 +10,24 @@ import XCTest
 @testable import BindableSwift
 
 class DisposableBagTests: XCTestCase {
+    
+    var sut: DisposableBag!
 
     
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        sut = DisposableBag()
     }
 
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        sut = nil
     }
-
+    
+    func testCustomDisposableBag() {
+        let bindable = Bindable(0)
+        XCTAssertTrue(sut.container.isEmpty)
+        bindable.observe(disposableBag: sut) {_ in }
+        XCTAssertEqual(sut.container.count, 1)
+        
+    }
 
 }

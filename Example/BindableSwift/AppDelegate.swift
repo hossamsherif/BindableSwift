@@ -21,15 +21,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window.makeKeyAndVisible()
         self.window = window
 //        return true
-        MainThread(self, after: .now() + 10) { (self) in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
+            guard let self = self else { return }
             self.window?.rootViewController = UINavigationController(rootViewController: ViewController.create())
 //            self.window?.rootViewController = UINavigationController(rootViewController: UIViewController())
             UserDefaultsManager.shared.appVersion.update("2.0")
         }
-        MainThread(self, after: .now() + 16) { (self) in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 16) { [weak self] in
+            guard let self = self else { return }
 //            self.window?.rootViewController = UINavigationController(rootViewController: ViewController.create())
             self.window?.rootViewController = UINavigationController(rootViewController: UIViewController())
-            UserDefaultsManager.shared.appVersion.update("2.0")
+            UserDefaultsManager.shared.appVersion.update("3.0")
         }
         return true
     }

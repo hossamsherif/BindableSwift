@@ -61,18 +61,23 @@ class ViewModel: ViewModelProtocol {
     var i:Int  = 0
     @Eventable<String> var input3
     lazy var input4 = Eventable<()>({ [weak self] stateHandler in
-        self?.printHello(4)
-        self?.$shouldGoToVC = true
+        guard let self = self else { return }
+        self.printHello(4)
+        self.$shouldGoToVC = true
         stateHandler(())
     }).immutable
     @Eventable<(name: String,active: Bool)> var input5
     @EventResult<Bool> var input6
     lazy var input7 = EventResult<()>({ [weak self] stateHandler in
-        self?.printHello(4)
-        self?.$shouldGoToVC = true
+        guard let self = self else { return }
+        self.printHello(4)
+        self.$shouldGoToVC = true
         stateHandler(.success(()))
     }).immutable
-    lazy var viewDidLoad = Event { [weak self] in self?.viewDidLoadHanlding() }.immutable
+    lazy var viewDidLoad = Event { [weak self] in
+        guard let self = self else { return }
+        self.viewDidLoadHanlding()
+    }.immutable
     
     @Bindable<Bool>(false) var shouldGoToVC
     @Bindable<Bool>(false) var isLoading

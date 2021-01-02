@@ -15,12 +15,12 @@ public protocol Disposable {
 }
 
 /// Diposable Unit conform to Disposable protocol for any disposable component made
-class DisposableUnit: Disposable  {
+struct DisposableUnit: Disposable  {
     //MARK:- Private properties
     public var isDisposed = false
     private var keyPair: KeyPair
-    private var disposableBag: DisposableBag!
-    fileprivate var disposeBlock:() -> ()
+    private var disposableBag: DisposableBag?
+    var disposeBlock:DisposeBlock
     
     //MARK:- Internal initializer
     
@@ -32,12 +32,12 @@ class DisposableUnit: Disposable  {
     /// - Returns: BindableDisposable instance
     init(_ primaryKey:ObjectIdentifier,
          _ secondaryKey:String,
-         disposableBag: DisposableBag = DisposableBag.shared,
+         disposableBag: DisposableBag? = nil,
          _ disposeBlock: @escaping () -> ()) {
-        self.disposeBlock = disposeBlock
         self.keyPair = KeyPair(primary: primaryKey, secondary: secondaryKey)
-        self.disposableBag = disposableBag
-        self.disposableBag.set(primaryKey, secondaryKey, value: self)
+        self.disposableBag = disposableBag ?? .shared
+        self.disposeBlock = DisposeBlock(disposeBlock)
+        self.disposableBag?.set(primaryKey, secondaryKey, value: self)
     }
     
     /// BindableDisposable init
@@ -46,29 +46,39 @@ class DisposableUnit: Disposable  {
     ///   - disposeBlock: disposeBlock to be fired on dispose
     /// - Returns: BindableDisposable instance
     init( _ keyPair: KeyPair,
-          disposableBag: DisposableBag = DisposableBag.shared,
+          disposableBag: DisposableBag? = nil,
           _ disposeBlock: @escaping () -> ()) {
-        self.disposeBlock = disposeBlock
         self.keyPair = keyPair
-        self.disposableBag = disposableBag
-        self.disposableBag.container[keyPair] = self
+        self.disposableBag = disposableBag ?? .shared
+        self.disposeBlock = DisposeBlock(disposeBlock)
+        self.disposableBag?.container[keyPair] = self
     }
     
-    deinit {
-        dispose()
-    }
+//    deinit {
+//        dispose()
+//    }
     
     //MARK:- Public methods
     /// Dispose a Bindable instance
     public func dispose() {
-        print("before: \(disposableBag.container.count)")
-        guard !isDisposed else { return }
-        isDisposed = true
+        print("before: \(disposableBag?.container.count ?? -1)")
+        guard !disposeBlock.isDisposed else { return }
+        disposeBlock.isDisposed = true
         disposeBlock()
-        disposableBag.remove(keyPair: keyPair)
-        print("after: \(disposableBag.container.count)")
+        disposableBag?.remove(keyPair: keyPair)
+        print("after: \(disposableBag?.container.count ?? -1)")
     }
 
+    class DisposeBlock {
+        var action: () -> ()
+        var isDisposed = false
+        init( _ action: @escaping () -> ()) {
+            self.action = action
+        }
+        func callAsFunction() {
+            action()
+        }
+    }
 }
 
 /// KeyPair is a pair of primary and secondary String keys
@@ -82,54 +92,58 @@ struct KeyPair: Hashable {
 public class DisposableBag {
     //MARK:- Private properties
     /// Main DisposableBag container
-    fileprivate var container = [KeyPair: DisposableUnit]()
+    var container = [KeyPair: DisposableUnit]()
     private let lock = NSRecursiveLock()
     
     //MARK:- singleton
     
     static let shared = DisposableBag()
     
-    fileprivate init() {}
-    
-    //MARK:- Public methods
-    /// Short hand for dispose(primaryKey: )
-    /// - Parameter referenceObject: primaryKey of diposeBlock(s) to dispose
-    public static func dispose(_ referenceObject: AnyObject) {
-        DisposableBag.dispose(primaryKey: ObjectIdentifier(referenceObject))
+    deinit {
+        container.forEach { $0.value.dispose() }
+        container.removeAll()
     }
     
-    //MARK:- Internal methods
+    public init() {}
+    
     /// dispose all with primaryKey
     /// - Parameter primaryKey: primaryKey of diposeBlock(s) to dispose
-    static func dispose(primaryKey: ObjectIdentifier) {
-        shared.get(primaryKey: primaryKey)?.forEach { $0.value.dispose() }
-    }
-    /// dispose all with secondaryKey
-    /// - Parameter primaryKey: secondaryKey of diposeBlock to dispose
-    static func dispose(secondaryKey: String) {
-        shared.get(secondaryKey: secondaryKey)?.forEach{ $0.value.dispose() }
+    func dispose(primaryKey: ObjectIdentifier) {
+        get(primaryKey: primaryKey)?.forEach { $0.value.dispose() }
     }
     
-    //MARK:- Private methods
-    /// Container for seto fo disposable.
+    /// dispose all with secondaryKey
+    /// - Parameter primaryKey: secondaryKey of diposeBlock to dispose
+    func dispose(secondaryKey: String) {
+        get(secondaryKey: secondaryKey)?.forEach{ $0.value.dispose() }
+    }
+    
+    /// Short hand for dispose(primaryKey: )
+    /// - Parameter referenceObject: primaryKey of diposeBlock(s) to dispose
+    public func dispose(_ referenceObject: AnyObject) {
+        get(primaryKey: ObjectIdentifier(referenceObject))?.forEach { $0.value.dispose() }
+    }
+    
+    /// Container for a set of disposable.
     /// Typically used manual memory management when the bindable object is not deallocated while the observer/binder object is deallocated
     /// - Parameters:
     ///   - referenceObject: object to reference this set of BindableDisposable
     ///   - bindableDisposables: array of BindableDisposable
     /// - Returns: return a BindableDisposable of the set of BindableDisposable to dipose later on
     @discardableResult
-    public static func container(_ referenceObject: AnyObject, _ bindableDisposables:[Disposable]) -> Disposable {
+    public func container(_ referenceObject: AnyObject,
+                   _ bindableDisposables:[Disposable]) -> Disposable {
         let keyPair = KeyPair(primary: ObjectIdentifier(referenceObject), secondary: "")
-        if let bindableDisposable = shared.container[keyPair] {
-            let oldDisposeBlock = bindableDisposable.disposeBlock
-            bindableDisposable.disposeBlock = { [weak bindableDisposable] in
+        if let bindableDisposable = container[keyPair] {
+            let oldDisposeBlock = bindableDisposable.disposeBlock.action
+            bindableDisposable.disposeBlock.action = { //[weak bindableDisposable] in
                 oldDisposeBlock()
-                bindableDisposable?.isDisposed = false
+                bindableDisposable.disposeBlock.isDisposed = false
                 bindableDisposables.forEach { $0.dispose() }
             }
             return bindableDisposable
         }
-        return DisposableUnit(keyPair) {
+        return DisposableUnit(keyPair, disposableBag: self) {
             bindableDisposables.forEach { $0.dispose() }
         }
     }
@@ -180,4 +194,39 @@ public class DisposableBag {
         let key = KeyPair(primary: primaryKey, secondary: secondaryKey)
         container.removeValue(forKey: key)
     }
+}
+
+//MARK:- Static methods for shared instance
+extension DisposableBag {
+    //MARK:- Internal methods
+    /// dispose all with primaryKey
+    /// - Parameter primaryKey: primaryKey of diposeBlock(s) to dispose
+    static func dispose(primaryKey: ObjectIdentifier) {
+        shared.dispose(primaryKey: primaryKey)
+    }
+    /// dispose all with secondaryKey
+    /// - Parameter primaryKey: secondaryKey of diposeBlock to dispose
+    static func dispose(secondaryKey: String) {
+        shared.dispose(secondaryKey: secondaryKey)
+    }
+    
+    //MARK:- Public methods
+    /// Short hand for dispose(primaryKey: )
+    /// - Parameter referenceObject: primaryKey of diposeBlock(s) to dispose
+    public static func dispose(_ referenceObject: AnyObject) {
+        shared.dispose(referenceObject)
+    }
+    
+    /// Container for a set of disposable with default shared instance
+    /// Typically used manual memory management when the bindable object is not deallocated while the observer/binder object is deallocated
+    /// - Parameters:
+    ///   - referenceObject: object to reference this set of BindableDisposable
+    ///   - bindableDisposables: array of BindableDisposable
+    /// - Returns: return a BindableDisposable of the set of BindableDisposable to dipose later on
+    @discardableResult
+    public static func container(_ referenceObject: AnyObject,
+                                 _ bindableDisposables:[Disposable]) -> Disposable {
+        return shared.container(referenceObject, bindableDisposables)
+    }
+    
 }

@@ -67,7 +67,8 @@ public class ImmutableEventBindable<EventStateType> : ImmutableEventableBase<Eve
     @discardableResult
     public override func signal() -> ImmutableBindable {
         action { [weak self] eventState in
-            self?.bindable.update(eventState)
+            guard let self = self else { return }
+            self.bindable.update(eventState)
         }
         return asBindable
     }
@@ -112,8 +113,10 @@ public class ImmutableEventBindableBase<EventStateType, ActionType> {
     }
     
     @discardableResult
-    public func observe(_ span:Span = .always, _ complection:@escaping (EventStateType) -> ()) -> Disposable {
-        return bindable.observe(span, complection)
+    public func observe(_ span:Span = .always,
+                        disposableBag: DisposableBag? = nil,
+                        _ complection:@escaping (EventStateType) -> ()) -> Disposable {
+        return bindable.observe(span, disposableBag: disposableBag, complection)
     }
     
     /// valueChanged call back when UIControl value is changed

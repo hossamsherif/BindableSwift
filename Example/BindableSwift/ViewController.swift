@@ -88,22 +88,24 @@ class ViewController: UIViewController {
         return viewModel.data.value ?? []
     }
     
+    var disposableBag = DisposableBag()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
         bindVM()
+        bindUserDefaults()
         viewModel.viewDidLoad()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        bindUserDefaults()
+
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        DisposableBag.dispose(self)
+//        DisposableBag.dispose(self)
     }
     
     func setupView() {
@@ -121,20 +123,21 @@ class ViewController: UIViewController {
     }
     
     func bindUserDefaults() {
-        DisposableBag.container(self, [
+//        DisposableBag.container(self, [
             UserDefaultsManager.shared.appVersion.bind(to: self, \.title, mapper: {
                 "Bindable Example \($0 ?? "")"
-            })
-        ])
+            }, disposableBag: disposableBag)
+//        ])
         
-        DisposableBag.container(self, [
+//        DisposableBag.container(self, [
             UserDefaultsManager.shared.isFirstTime
                 .observeOn
                 .once
+                .disposableBag(disposableBag)
                 .done {
                     print(">>>>>>", $0)
                 }
-        ])
+//        ])
     }
     
     func bindVM() {
@@ -143,7 +146,8 @@ class ViewController: UIViewController {
         //        }
         
         viewModel.isLoading.bind(to: myView.loader, \.isHidden, mapper: { !$0 }, completion: { [weak self] isLoading in
-            isLoading ? self?.myView.loader.startAnimating() : self?.myView.loader.stopAnimating()
+            guard let self = self else { return }
+            isLoading ? self.myView.loader.startAnimating() : self.myView.loader.stopAnimating()
         })
 //        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay, .always,completion:  { newValue in
 //            print(newValue)
@@ -197,13 +201,16 @@ class ViewController: UIViewController {
         //        viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { $0.isEmpty })
         
         viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { [weak self] _ in
-            return self?.myView.switchControl.isOn ?? false
+            guard let self = self else { return false }
+            return self.myView.switchControl.isOn
         }, completion:{ [weak self] in
-            self?.myView.switchControl.setOn($0.isEmpty, animated: true)
+            guard let self = self else { return }
+            self.myView.switchControl.setOn($0.isEmpty, animated: true)
         })
         
         viewModel.data.observe { [weak self] _ in
-            self?.myView.tableView.reloadData()
+            guard let self = self else { return }
+            self.myView.tableView.reloadData()
         }
         
 //        myView.button.addAction { sender in

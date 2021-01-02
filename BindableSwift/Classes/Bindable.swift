@@ -49,6 +49,7 @@ public protocol AbastractBindable {
     @discardableResult
     func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>,
                     _ span: Span,
+                    disposableBag: DisposableBag?,
                     _ completion: @escaping (T) -> ()) -> Disposable
     
     /// bind an object to this bindable
@@ -67,6 +68,7 @@ public protocol AbastractBindable {
                                   mode: BindMode,
                                   mapper: @escaping (T) -> R,
                                   _ span: Span,
+                                  disposableBag: DisposableBag?,
                                   completion: ((T) -> ())?) -> Disposable
     
     
@@ -76,7 +78,7 @@ public protocol AbastractBindable {
     ///   - object: object to bind on
     ///   - objectKeyPath: object key path
     func bindOn<T, O:AnyObject, R>(_ sourceKeyPath: KeyPath<BindingType, T>,
-                                          _ object: O, _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, T, O, R>
+                                   _ object: O, _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, T, O, R>
     
     /// Return a new Observable builder
     ///   - sourceKeyPath: source key path for the current bindable
@@ -86,8 +88,10 @@ public protocol AbastractBindable {
 public extension AbastractBindable {
     
     @discardableResult
-    func observe(_ span: Span = .always, _ completion: @escaping (BindingType) -> ()) -> Disposable {
-        observe(\BindingType.self, span, completion)
+    func observe(_ span: Span = .always,
+                 disposableBag: DisposableBag? = nil,
+                 _ completion: @escaping (BindingType) -> ()) -> Disposable {
+        observe(\BindingType.self, span, disposableBag: disposableBag, completion)
     }
     @discardableResult
     func bind<O: AnyObject, T, R>(_ sourceKeyPath: KeyPath<BindingType, T>,
@@ -96,8 +100,9 @@ public extension AbastractBindable {
                                   mode: BindMode = .oneWay,
                                   mapper: @escaping (T) -> R = { $0 as! R },
                                   _ span: Span = .always,
+                                  disposableBag: DisposableBag? = nil,
                                   completion: ((T) -> ())? = nil) -> Disposable {
-        bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, span, completion: completion)
+        bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, span, disposableBag: disposableBag, completion: completion)
     }
     
     @discardableResult
@@ -106,8 +111,9 @@ public extension AbastractBindable {
                                mode: BindMode = .oneWay,
                                mapper: @escaping (BindingType) -> R = { $0 as! R },
                                _ span: Span = .always,
+                               disposableBag: DisposableBag? = nil,
                                completion: ((BindingType) -> ())? = nil) -> Disposable {
-        bind(\BindingType.self, to: object, objectKeyPath, mode: mode, mapper: mapper, span, completion: completion)
+        bind(\BindingType.self, to: object, objectKeyPath, mode: mode, mapper: mapper, span, disposableBag: disposableBag, completion: completion)
     }
     
     func bindOn<O:AnyObject, R>(_ object: O,
@@ -192,8 +198,11 @@ public class Bindable<BindingType>: AbastractBindable {
     }
     
     @discardableResult
-    public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>, _ span:Span = .always, _ completion: @escaping (T) -> ()) -> Disposable {
-        return immutable.observe(sourceKeyPath, span, completion)
+    public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>,
+                           _ span:Span = .always,
+                           disposableBag: DisposableBag? = nil,
+                           _ completion: @escaping (T) -> ()) -> Disposable {
+        return immutable.observe(sourceKeyPath, span, disposableBag: disposableBag, completion)
     }
     
     @discardableResult
@@ -203,8 +212,9 @@ public class Bindable<BindingType>: AbastractBindable {
                                          mode: BindMode = .oneWay,
                                          mapper: @escaping (T) -> R = { $0 as! R },
                                          _ span: Span = .always,
+                                         disposableBag: DisposableBag? = nil,
                                          completion: ((T) -> ())? = nil) -> Disposable {
-        return immutable.bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, span, completion: completion)
+        return immutable.bind(sourceKeyPath, to: object, objectKeyPath, mode: mode, mapper: mapper, span, disposableBag: disposableBag, completion: completion)
     }
     
 }
@@ -213,6 +223,7 @@ public class ObservableBuilder<BindingType,T> {
     //MARK: Properties
     fileprivate var sourceKeyPath: KeyPath<BindingType, T>?
     fileprivate var span: Span = .always
+    fileprivate var disposableBag: DisposableBag?
     fileprivate weak var bindable: ImmutableBindable<BindingType>?
     
     required init(_ bindable: ImmutableBindable<BindingType>) {
@@ -232,11 +243,19 @@ public class ObservableBuilder<BindingType,T> {
         self.span = .times(time)
         return self
     }
+    
+    //MARK: DisposableBag
+    public func disposableBag(_ disposableBag: DisposableBag?) -> Self {
+        self.disposableBag = disposableBag
+        return self
+    }
+    
     //MARK: Build
     @discardableResult
     public func done(_ handler: @escaping (T) -> ()) -> Disposable {
         return bindable!.observe(sourceKeyPath!,
                                  span,
+                                 disposableBag: disposableBag,
                                  handler)
     }
     
@@ -277,6 +296,7 @@ public class BindableBuilder<BindingType,T, O:AnyObject, R>: ObservableBuilder<B
                               mode: mode,
                               mapper: map ?? { $0 as! R },
                               span,
+                              disposableBag: disposableBag,
                               completion: completion)
     }
 }
@@ -346,16 +366,18 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     @discardableResult
     public func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>,
                            _ span: Span = .always,
+                           disposableBag: DisposableBag? = nil,
                            _ completion: @escaping (T) -> ()) -> Disposable {
         currentValue.map { completion($0[keyPath: sourceKeyPath]) }
         let secondaryKey = UUID().uuidString
-        let disposable = DisposableUnit(primaryKey, secondaryKey) { [weak self] in
-            self?.observers.removeValue(forKey: secondaryKey)
+        let disposable = DisposableUnit(primaryKey, secondaryKey, disposableBag: disposableBag) { [weak self] in
+            guard let self = self else { return }
+            self.observers.removeValue(forKey: secondaryKey)
         }
         var currentSpan = span
-        observers[secondaryKey] = { [weak disposable] in
+        observers[secondaryKey] = {
             completion($0[keyPath: sourceKeyPath])
-            if currentSpan.tik() { disposable?.dispose() }
+            if currentSpan.tik() { disposable.dispose() }
         }
         return disposable
     }
@@ -381,12 +403,13 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
                                          mode: BindMode = .oneWay,
                                          mapper: @escaping (T) -> R = { $0 as! R },
                                          _ span: Span = .always,
+                                         disposableBag: DisposableBag? = nil,
                                          completion: ((T) -> ())? = nil) -> Disposable {
         
         if mode == .towWay {
             addTowWayBinding(object, objectKeyPath)
         }
-        return addObserver(for: object, objectKeyPath, mode, span) { [weak object] observed in
+        return addObserver(for: object, objectKeyPath, mode, span, disposableBag: disposableBag) { [weak object] observed in
             guard let object = object else { return }
             let value = observed[keyPath: sourceKeyPath]
             let mapped = mapper(value)
@@ -425,22 +448,23 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     ///   - completion: completion handler to be called when value is changed
     private func addObserver<O: AnyObject, R>(for object: O,
                                               _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
-                                              _ mode: BindMode = .oneWay,
-                                              _ span: Span = .always,
+                                              _ mode: BindMode,
+                                              _ span: Span,
+                                              disposableBag: DisposableBag?,
                                               completion: @escaping (BindingType) -> Void) -> Disposable {
         let secondaryKey = getObserverHash(object, objectKeyPath)
         //Dipose previous binding from object/objectKeyPath pair
         DisposableBag.dispose(secondaryKey: secondaryKey)
         //Invoke completion for initial value (if any)
         currentValue.map { completion($0) }
-        let disposable =  DisposableUnit(primaryKey, secondaryKey) { [weak self, weak object, weak objectKeyPath] in
-            guard let object = object, let objectKeyPath = objectKeyPath else { return }
-            self?.unbind(from: object, objectKeyPath, mode: mode)
+        let disposable =  DisposableUnit(primaryKey, secondaryKey, disposableBag: disposableBag) { [weak self, weak object] in
+            guard let self = self, let object = object else { return }
+            self.unbind(from: object, objectKeyPath, mode: mode)
         }
         var currentSpan = span
-        observers[secondaryKey] = { [weak disposable] in
+        observers[secondaryKey] = {
             completion($0)
-            if currentSpan.tik() { disposable?.dispose() }
+            if currentSpan.tik() { disposable.dispose() }
         }
         return disposable
     }
