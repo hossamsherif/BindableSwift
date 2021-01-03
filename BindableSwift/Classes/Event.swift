@@ -21,19 +21,19 @@ public protocol CallableAsFunction {
 }
 
 protocol Onable: class {
-    func on<O: UIControl>(selector:Selector, _ control:O, for event: UIControl.Event)
+    @discardableResult
+    func on<O: UIControl>(selector:Selector, _ control:O, for event: UIControl.Event, _ disposableBag: DisposableBag?) -> Disposable
 }
 extension Onable {
-    func on<O: UIControl>(selector:Selector, _ control:O, for event: UIControl.Event) {
+    @discardableResult
+    func on<O: UIControl>(selector:Selector, _ control:O, for event: UIControl.Event, _ disposableBag: DisposableBag? = nil) -> Disposable {
         control.addTarget(self, action: selector, for: event)
         let primaryKey: ObjectIdentifier = ObjectIdentifier(self)
         let secondaryKey = "\(UInt(bitPattern: ObjectIdentifier(control)))\(event)"
-        let disposableEvent = DisposableUnit(primaryKey, secondaryKey) { [weak self, weak control] in
+        return DisposableUnit(primaryKey, secondaryKey, disposableBag: disposableBag) { [weak self, weak control] in
             guard let self = self, let control = control else { return }
             control.removeTarget(self, action:  selector, for: event)
         }
-        DisposableBag.container(self, [disposableEvent])
-        
     }
 }
 
@@ -95,8 +95,9 @@ public class ImmutableEvent {
     
     deinit { DisposableBag.dispose(self) }
     
-    public func on<O: UIControl>(_ control:O, for event: UIControl.Event) {
-        on(selector: #selector(self.signal), control, for: event)
+    @discardableResult
+    public func on<O: UIControl>(_ control:O, for event: UIControl.Event, _ disposableBag: DisposableBag? = nil) -> Disposable {
+        return on(selector: #selector(self.signal), control, for: event, disposableBag)
     }
     
     @objc public func signal() { action() }

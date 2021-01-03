@@ -22,7 +22,7 @@ class UserDefaultsManager: UserDefaultsManagerProtocol {
     
     // MARK:- Singleton
     
-    static let shared:UserDefaultsManagerProtocol = UserDefaultsManager()
+    static var shared:UserDefaultsManagerProtocol = UserDefaultsManager()
     
     // MARK: Properties
     
@@ -100,12 +100,12 @@ class ViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
+        
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-//        DisposableBag.dispose(self)
+        //        DisposableBag.dispose(self)
     }
     
     func setupView() {
@@ -121,23 +121,23 @@ class ViewController: UIViewController {
         viewController.viewModel = viewModel
         return viewController
     }
-    
     func bindUserDefaults() {
-//        DisposableBag.container(self, [
-            UserDefaultsManager.shared.appVersion.bind(to: self, \.title, mapper: {
-                "Bindable Example \($0 ?? "")"
-            }, disposableBag: disposableBag)
-//        ])
-        
-//        DisposableBag.container(self, [
-            UserDefaultsManager.shared.isFirstTime
-                .observeOn
-                .once
-                .disposableBag(disposableBag)
-                .done {
-                    print(">>>>>>", $0)
-                }
-//        ])
+//        UserDefaultsManager.shared.appVersion.bind(to: self, \.title, mapper: {
+//            "Bindable Example \($0 ?? "")"
+//        }, disposableBag: disposableBag)
+        UserDefaultsManager.shared
+            .appVersion
+            .bindOn(self, \.title)
+            .map { "Bindable Example \($0 ?? "")" }
+            .disposableBag(disposableBag)
+            .done()
+        UserDefaultsManager.shared.isFirstTime
+            .observeOn
+            .once
+            .disposableBag(disposableBag)
+            .done {
+                print(">>>>>>", $0)
+            }
     }
     
     func bindVM() {
@@ -149,30 +149,30 @@ class ViewController: UIViewController {
             guard let self = self else { return }
             isLoading ? self.myView.loader.startAnimating() : self.myView.loader.stopAnimating()
         })
-//        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay, .always,completion:  { newValue in
-//            print(newValue)
-//        })
-//        viewModel
-//            .input3
-//            .on(myView.button, for: .touchUpInside)
-//            .asBindable
-//            .bind(to: myView.textField, \.text, mode: .towWay)
-//        viewModel
-//            .input3
-//            .observe { [weak self] in
-//                self?.myView.switchControl.setOn($0.count%2==0, animated: true)
-//            }
-//        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay)
-//        viewModel.numberOnlyValidator.on(myView.textField, for: .editingChanged)
-//
-
+        //        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay, .always,completion:  { newValue in
+        //            print(newValue)
+        //        })
+        //        viewModel
+        //            .input3
+        //            .on(myView.button, for: .touchUpInside)
+        //            .asBindable
+        //            .bind(to: myView.textField, \.text, mode: .towWay)
+        //        viewModel
+        //            .input3
+        //            .observe { [weak self] in
+        //                self?.myView.switchControl.setOn($0.count%2==0, animated: true)
+        //            }
+        //        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay)
+        //        viewModel.numberOnlyValidator.on(myView.textField, for: .editingChanged)
+        //
+        
         
         viewModel
             .input3
             .asBindable
             .bind(to: myView.switchControl, \.isOn, mode: .oneWay, mapper: { $0.count%2==0 })
         
-
+        
         
         //        viewModel.name.bind(to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" }, .once)
         viewModel.name
@@ -183,16 +183,16 @@ class ViewController: UIViewController {
         
         viewModel.name
             .observeOn
-//            .map { $0.isEmpty ? "" : "Mr. \($0)" }
+            //            .map { $0.isEmpty ? "" : "Mr. \($0)" }
             .always
             .done {
                 print($0)
             }
         
         
-//        viewModel.name.observe(\String.self) { [weak self] in
-//            self?.myView.switchControl.setOn($0.isEmpty, animated: true)
-//        }
+        //        viewModel.name.observe(\String.self) { [weak self] in
+        //            self?.myView.switchControl.setOn($0.isEmpty, animated: true)
+        //        }
         //        viewModel.isLoading.bind(to: myView, \.myEnum, mapper: { $0 ? .x : .y }) { [weak self] in
         //            print($0, self?.myView.myEnum ?? "-")
         //        }
@@ -213,15 +213,15 @@ class ViewController: UIViewController {
             self.myView.tableView.reloadData()
         }
         
-//        myView.button.addAction { sender in
-//            print("cool action: \(sender.titleLabel?.text ?? "")")
-//        }
-//
-//        myView.button.actionEvent.asBindable.observe {
-//            print("cool event: \($0.titleLabel?.text ?? "")")
-//        }
+        //        myView.button.addAction { sender in
+        //            print("cool action: \(sender.titleLabel?.text ?? "")")
+        //        }
+        //
+        //        myView.button.actionEvent.asBindable.observe {
+        //            print("cool event: \($0.titleLabel?.text ?? "")")
+        //        }
         
-//            .bind(self, \.names, mapper: { $0.compactMap { $0.title.value } })
+        //            .bind(self, \.names, mapper: { $0.compactMap { $0.title.value } })
         //
         //        viewModel
         //            .input6
@@ -247,7 +247,7 @@ class ViewController: UIViewController {
         
         viewModel
             .input
-            .on(myView.button, for: .touchUpInside)
+            .on(myView.button, for: .touchUpInside, disposableBag)
         
         //        viewModel.shouldGoToVC.observe(\Bool.self) { [weak self] in
         //            $0 ? self?.navigationController?.pushViewController(ViewController.create(), animated: true) : ()

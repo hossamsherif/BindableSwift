@@ -370,14 +370,14 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
                            _ completion: @escaping (T) -> ()) -> Disposable {
         currentValue.map { completion($0[keyPath: sourceKeyPath]) }
         let secondaryKey = UUID().uuidString
-        let disposable = DisposableUnit(primaryKey, secondaryKey, disposableBag: disposableBag) { [weak self] in
+        let disposable: Disposable = DisposableUnit(primaryKey, secondaryKey, disposableBag: disposableBag) { [weak self] in
             guard let self = self else { return }
             self.observers.removeValue(forKey: secondaryKey)
         }
         var currentSpan = span
-        observers[secondaryKey] = {
+        observers[secondaryKey] = { [weak disposable] in
             completion($0[keyPath: sourceKeyPath])
-            if currentSpan.tik() { disposable.dispose() }
+            if currentSpan.tik() { disposable?.dispose() }
         }
         return disposable
     }
@@ -457,14 +457,16 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
         DisposableBag.dispose(secondaryKey: secondaryKey)
         //Invoke completion for initial value (if any)
         currentValue.map { completion($0) }
-        let disposable =  DisposableUnit(primaryKey, secondaryKey, disposableBag: disposableBag) { [weak self, weak object] in
+        let disposable: Disposable = DisposableUnit(primaryKey, secondaryKey, disposableBag: disposableBag) { [weak self, weak object] in
             guard let self = self, let object = object else { return }
             self.unbind(from: object, objectKeyPath, mode: mode)
         }
         var currentSpan = span
-        observers[secondaryKey] = {
+        observers[secondaryKey] = { [weak disposable] in
             completion($0)
-            if currentSpan.tik() { disposable.dispose() }
+            if currentSpan.tik() {
+                disposable?.dispose()
+            }
         }
         return disposable
     }
