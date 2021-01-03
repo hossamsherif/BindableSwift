@@ -454,7 +454,8 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
                                               completion: @escaping (BindingType) -> Void) -> Disposable {
         let secondaryKey = getObserverHash(object, objectKeyPath)
         //Dipose previous binding from object/objectKeyPath pair
-        DisposableBag.dispose(secondaryKey: secondaryKey)
+        let disposableBag = disposableBag ?? .shared
+        disposableBag.dispose(secondaryKey: secondaryKey)
         //Invoke completion for initial value (if any)
         currentValue.map { completion($0) }
         let disposable: Disposable = DisposableUnit(primaryKey, secondaryKey, disposableBag: disposableBag) { [weak self, weak object] in
