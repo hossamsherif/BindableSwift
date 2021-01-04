@@ -45,6 +45,7 @@ public protocol AbastractBindable {
     /// - Parameters:
     ///   - sourceKeyPath: source key path for the current bindable
     ///   - span: binding life time - default: .always
+    ///   - disposableBag: DisposableBag for maintaining memory managment - default: nil
     ///   - completion: completion handler called after each update from source to object
     @discardableResult
     func observe<T>(_ sourceKeyPath: KeyPath<BindingType, T>,
@@ -60,6 +61,7 @@ public protocol AbastractBindable {
     ///   - mode: binding mode type - default: .onWay
     ///   - mapper: transfomation mapper from source to object
     ///   - span: binding life time - default: .always
+    ///   - disposableBag: DisposableBag for maintaining memory managment - default: nil
     ///   - completion: completion handler called after each update from source to object - default: nil
     @discardableResult
     func bind<O: AnyObject, T, R>(_ sourceKeyPath: KeyPath<BindingType, T>,
@@ -219,88 +221,6 @@ public class Bindable<BindingType>: AbastractBindable {
     
 }
 
-public class ObservableBuilder<BindingType,T> {
-    //MARK: Properties
-    fileprivate var sourceKeyPath: KeyPath<BindingType, T>?
-    fileprivate var span: Span = .always
-    fileprivate var disposableBag: DisposableBag?
-    fileprivate weak var bindable: ImmutableBindable<BindingType>?
-    
-    required init(_ bindable: ImmutableBindable<BindingType>) {
-        self.bindable = bindable
-    }
-    
-    //MARK: span
-    public var once: Self {
-        self.span = .once
-        return self
-    }
-    public var always: Self {
-        self.span = .always
-        return self
-    }
-    public func times(_ time:Int) -> Self {
-        self.span = .times(time)
-        return self
-    }
-    
-    //MARK: DisposableBag
-    public func disposableBag(_ disposableBag: DisposableBag?) -> Self {
-        self.disposableBag = disposableBag
-        return self
-    }
-    
-    //MARK: Build
-    @discardableResult
-    public func done(_ handler: @escaping (T) -> ()) -> Disposable {
-        return bindable!.observe(sourceKeyPath!,
-                                 span,
-                                 disposableBag: disposableBag,
-                                 handler)
-    }
-    
-}
-public class BindableBuilder<BindingType,T, O:AnyObject, R>: ObservableBuilder<BindingType,T> {
-    //MARK: Properties
-    fileprivate var object: O?
-    fileprivate var objectKeyPath: ReferenceWritableKeyPath<O, R>?
-    fileprivate var mode: BindMode = .oneWay
-    fileprivate var map:  ((T) -> R)?
-    fileprivate var completion: ((T) -> ())? = nil
-    
-    required init(_ bindable: ImmutableBindable<BindingType>) {
-        super.init(bindable)
-    }
-    
-    //MARK: mode
-    public var oneWay: Self {
-        self.mode = .oneWay
-        return self
-    }
-    public var towWay: Self {
-        self.mode = .towWay
-        return self
-    }
-    //MARK: map
-    public func map(_ map: @escaping (T) -> R) -> Self {
-        self.map = map
-        return self
-    }
-    //MARK: Build
-    @discardableResult
-    public override func done(_ handler: ((T) -> ())? = nil) -> Disposable {
-        self.completion = handler
-        return bindable!.bind(sourceKeyPath!,
-                              to: object!,
-                              objectKeyPath!,
-                              mode: mode,
-                              mapper: map ?? { $0 as! R },
-                              span,
-                              disposableBag: disposableBag,
-                              completion: completion)
-    }
-}
-
 /// Immutable representation of bindable object
 public class ImmutableBindable<BindingType>: AbastractBindable {
     
@@ -368,6 +288,7 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
                            _ span: Span = .always,
                            disposableBag: DisposableBag? = nil,
                            _ completion: @escaping (T) -> ()) -> Disposable {
+        //Invoke completion for first time on currentValue (if any)
         currentValue.map { completion($0[keyPath: sourceKeyPath]) }
         let secondaryKey = UUID().uuidString
         let disposable: Disposable = DisposableUnit(primaryKey, secondaryKey, disposableBag: disposableBag) { [weak self] in
@@ -390,9 +311,7 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     private func unbind<O: AnyObject, R>(from object: O,
                                          _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
                                          mode:BindMode = .oneWay) {
-        if mode == .towWay {
-            removeTowWayBind(object)
-        }
+        if mode == .towWay { removeTowWayBind(object) }
         observers.removeValue(forKey: getObserverHash(object, objectKeyPath))
     }
     
@@ -406,9 +325,7 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
                                          disposableBag: DisposableBag? = nil,
                                          completion: ((T) -> ())? = nil) -> Disposable {
         
-        if mode == .towWay {
-            addTowWayBinding(object, objectKeyPath)
-        }
+        if mode == .towWay { addTowWayBinding(object, objectKeyPath) }
         return addObserver(for: object, objectKeyPath, mode, span, disposableBag: disposableBag) { [weak object] observed in
             guard let object = object else { return }
             let value = observed[keyPath: sourceKeyPath]
@@ -445,6 +362,7 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     /// - Parameters:
     ///   - object: observer object
     ///   - objectKeyPath: key path of observer object to be changed on value change
+    ///   - disposableBag: DisposableBag for maintaining memory managment - default: nil
     ///   - completion: completion handler to be called when value is changed
     private func addObserver<O: AnyObject, R>(for object: O,
                                               _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
@@ -456,7 +374,7 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
         //Dipose previous binding from object/objectKeyPath pair
         let disposableBag = disposableBag ?? .shared
         disposableBag.dispose(secondaryKey: secondaryKey)
-        //Invoke completion for initial value (if any)
+        //Invoke completion for first time on currentValue (if any)
         currentValue.map { completion($0) }
         let disposable: Disposable = DisposableUnit(primaryKey, secondaryKey, disposableBag: disposableBag) { [weak self, weak object] in
             guard let self = self, let object = object else { return }
@@ -511,5 +429,90 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
             NotificationCenter.default.removeObserver(self, name: UITextView.textDidChangeNotification, object: nil)
         }
         keyPath = nil
+    }
+}
+
+//MARK:- Builders
+
+public class ObservableBuilder<BindingType,T> {
+    //MARK: Properties
+    fileprivate var sourceKeyPath: KeyPath<BindingType, T>?
+    fileprivate var span: Span = .always
+    fileprivate var disposableBag: DisposableBag?
+    fileprivate weak var bindable: ImmutableBindable<BindingType>?
+    
+    required init(_ bindable: ImmutableBindable<BindingType>) {
+        self.bindable = bindable
+    }
+    
+    //MARK: span
+    public var once: Self {
+        self.span = .once
+        return self
+    }
+    public var always: Self {
+        self.span = .always
+        return self
+    }
+    public func times(_ time:Int) -> Self {
+        self.span = .times(time)
+        return self
+    }
+    
+    //MARK: DisposableBag
+    public func disposableBag(_ disposableBag: DisposableBag?) -> Self {
+        self.disposableBag = disposableBag
+        return self
+    }
+    
+    //MARK: Build
+    @discardableResult
+    public func done(_ handler: @escaping (T) -> ()) -> Disposable {
+        return bindable!.observe(sourceKeyPath!,
+                                 span,
+                                 disposableBag: disposableBag,
+                                 handler)
+    }
+    
+}
+
+public class BindableBuilder<BindingType,T, O:AnyObject, R>: ObservableBuilder<BindingType,T> {
+    //MARK: Properties
+    fileprivate var object: O?
+    fileprivate var objectKeyPath: ReferenceWritableKeyPath<O, R>?
+    fileprivate var mode: BindMode = .oneWay
+    fileprivate var map:  ((T) -> R)?
+    fileprivate var completion: ((T) -> ())? = nil
+    
+    required init(_ bindable: ImmutableBindable<BindingType>) {
+        super.init(bindable)
+    }
+    
+    //MARK: mode
+    public var oneWay: Self {
+        self.mode = .oneWay
+        return self
+    }
+    public var towWay: Self {
+        self.mode = .towWay
+        return self
+    }
+    //MARK: map
+    public func map(_ map: @escaping (T) -> R) -> Self {
+        self.map = map
+        return self
+    }
+    //MARK: Build
+    @discardableResult
+    public override func done(_ handler: ((T) -> ())? = nil) -> Disposable {
+        self.completion = handler
+        return bindable!.bind(sourceKeyPath!,
+                              to: object!,
+                              objectKeyPath!,
+                              mode: mode,
+                              mapper: map ?? { $0 as! R },
+                              span,
+                              disposableBag: disposableBag,
+                              completion: completion)
     }
 }

@@ -15,12 +15,12 @@ public protocol Disposable: class {
 }
 
 /// Diposable Unit conform to Disposable protocol for any disposable component made
-class DisposableUnit: Disposable  {
+class DisposableUnit: Disposable {
     //MARK:- Private properties
     public var isDisposed = false
     private var keyPair: KeyPair
     private weak var disposableBag: DisposableBag?
-    fileprivate var disposeBlock: (() -> ())?
+    private var disposeBlock: (() -> ())?
     
     //MARK:- Internal initializer
     
@@ -31,9 +31,9 @@ class DisposableUnit: Disposable  {
     ///   - disposeBlock: disposeBlock to be fired on dispose
     /// - Returns: BindableDisposable instance
     convenience init(_ primaryKey:ObjectIdentifier,
-         _ secondaryKey:String,
-         disposableBag: DisposableBag? = nil,
-         _ disposeBlock: @escaping () -> ()) {
+                     _ secondaryKey:String,
+                     disposableBag: DisposableBag? = nil,
+                     _ disposeBlock: @escaping () -> ()) {
         let keyPair = KeyPair(primary: primaryKey, secondary: secondaryKey)
         self.init(keyPair, disposableBag: disposableBag, disposeBlock)
     }
@@ -51,10 +51,6 @@ class DisposableUnit: Disposable  {
         self.disposableBag = disposableBag ?? .shared
         self.disposableBag?.container[keyPair] = self
     }
-    
-//    deinit {
-//        dispose()
-//    }
     
     //MARK:- Public methods
     /// Dispose a Bindable instance
@@ -110,31 +106,6 @@ public class DisposableBag {
     public func dispose(_ referenceObject: AnyObject) {
         get(primaryKey: ObjectIdentifier(referenceObject))?.forEach { $0.value.dispose() }
     }
-    
-    /// Container for a set of disposable.
-    /// Typically used manual memory management when the bindable object is not deallocated while the observer/binder object is deallocated
-    /// - Parameters:
-    ///   - referenceObject: object to reference this set of BindableDisposable
-    ///   - bindableDisposables: array of BindableDisposable
-    /// - Returns: return a BindableDisposable of the set of BindableDisposable to dipose later on
-//    @discardableResult
-//    public func container(_ referenceObject: AnyObject,
-//                   _ bindableDisposables:[Disposable]) -> Disposable {
-//        let keyPair = KeyPair(primary: ObjectIdentifier(referenceObject), secondary: "")
-//        if let bindableDisposable = container[keyPair] {
-//            let oldDisposeBlock = bindableDisposable.disposeBlock
-//            bindableDisposable.disposeBlock = { //[weak bindableDisposable] in
-//                oldDisposeBlock?()
-//                bindableDisposable.isDisposed = false
-//                bindableDisposables.forEach { $0.dispose() }
-//            }
-//            return bindableDisposable
-//        }
-//        return DisposableUnit(keyPair, disposableBag: self) {
-//            bindableDisposables.forEach { $0.dispose() }
-//        }
-//    }
-    
     
     //MARK:- Getters
     func get(primaryKey:ObjectIdentifier) -> [KeyPair: DisposableUnit]? {
@@ -203,17 +174,4 @@ extension DisposableBag {
     public static func dispose(_ referenceObject: AnyObject) {
         shared.dispose(referenceObject)
     }
-    
-    /// Container for a set of disposable with default shared instance
-    /// Typically used manual memory management when the bindable object is not deallocated while the observer/binder object is deallocated
-    /// - Parameters:
-    ///   - referenceObject: object to reference this set of BindableDisposable
-    ///   - bindableDisposables: array of BindableDisposable
-    /// - Returns: return a BindableDisposable of the set of BindableDisposable to dipose later on
-//    @discardableResult
-//    public static func container(_ referenceObject: AnyObject,
-//                                 _ bindableDisposables:[Disposable]) -> Disposable {
-//        return shared.container(referenceObject, bindableDisposables)
-//    }
-    
 }
