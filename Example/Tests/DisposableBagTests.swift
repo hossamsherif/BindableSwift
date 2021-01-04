@@ -22,12 +22,13 @@ class DisposableBagTests: XCTestCase {
         sut = nil
     }
     
-    func testCustomDisposableBag() {
+    func testDisposableUnitDispose() {
         let bindable = Bindable(0)
         XCTAssertTrue(sut.container.isEmpty)
-        bindable.observe(disposableBag: sut) {_ in }
+        let disposable = bindable.observe(disposableBag: sut) {_ in }
         XCTAssertEqual(sut.container.count, 1)
-        
+        disposable.dispose()
+        XCTAssertTrue(sut.container.isEmpty)
     }
 
 }

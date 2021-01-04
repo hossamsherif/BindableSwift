@@ -12,15 +12,23 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    
+    private var normalExecutionPath: Bool {
+        return NSClassFromString("XCTestCase") == nil
+    }
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        guard normalExecutionPath else {
+            window = nil
+            return false
+        }
         UserDefaultsManager.shared.appVersion.update("1.0")
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.rootViewController = UINavigationController(rootViewController:  ViewController.create())
         window.makeKeyAndVisible()
         self.window = window
-//        return true
+        return true
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
             guard let self = self else { return }
             self.window?.rootViewController = UINavigationController(rootViewController: ViewController.create())
@@ -35,6 +43,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         return true
     }
+    
+    
 
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.

@@ -149,9 +149,9 @@ class ViewController: UIViewController {
             guard let self = self else { return }
             isLoading ? self.myView.loader.startAnimating() : self.myView.loader.stopAnimating()
         })
-        //        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay, .always,completion:  { newValue in
-        //            print(newValue)
-        //        })
+        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay, .always,completion:  { newValue in
+            print(newValue)
+        })
         //        viewModel
         //            .input3
         //            .on(myView.button, for: .touchUpInside)
@@ -174,7 +174,7 @@ class ViewController: UIViewController {
         
         
         
-        //        viewModel.name.bind(to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" }, .once)
+//        viewModel.name.bind(to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" }, .once)
         viewModel.name
             .bindOn(myView.label, \.text)
             .map { $0.isEmpty ? "" : "Mr. \($0)" }
@@ -247,7 +247,7 @@ class ViewController: UIViewController {
         
         viewModel
             .input
-            .on(myView.button, for: .touchUpInside, disposableBag)
+            .on(myView.button, for: .touchUpInside)
         
         //        viewModel.shouldGoToVC.observe(\Bool.self) { [weak self] in
         //            $0 ? self?.navigationController?.pushViewController(ViewController.create(), animated: true) : ()
@@ -289,12 +289,18 @@ class MyView: UIView {
         label.heightAnchor.constraint(greaterThanOrEqualToConstant: 21.0).isActive = true
         return label
     }()
-    let textField = { () -> UnsignedNumberTF in
-        let textField = UnsignedNumberTF()
+    let textField = { () -> UITextField in
+        let textField = UITextField()
         textField.borderStyle = .roundedRect
         textField.textContentType = .name
         return textField
     }()
+//    let textField = { () -> UnsignedNumberTF in
+//        let textField = UnsignedNumberTF()
+//        textField.borderStyle = .roundedRect
+//        textField.textContentType = .name
+//        return textField
+//    }()
     let switchControl = UISwitch()
     let tableView = { () -> UITableView in
         let tableView = UITableView()

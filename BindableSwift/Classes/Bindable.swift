@@ -147,6 +147,22 @@ public class Bindable<BindingType>: AbastractBindable {
         return immutable
     }
     
+    /// projectedValue from @propertyWrapper to easily access value from Bindable instance
+    /// While mantaing exported value property for ImmutableBindable
+    public var projectedValue: BindingType {
+        get {
+            /*
+             * Note:
+             * If you try to directly unwrap currentValue it will crash with Optional BindingType.
+             * Contional casting on the other hand can have optional outcome with nil value in it.
+             */
+            return value as! BindingType
+        }
+        set {
+            update(newValue)
+        }
+    }
+    
     /// Main init for Bindable<BindingType>
     /// - Parameter immutable: BindableImmutable<BindingType> wrapped by this class
     public init(immutable: Immutable = ImmutableBindable()) {
@@ -170,29 +186,9 @@ public class Bindable<BindingType>: AbastractBindable {
         immutable.observers.forEach{ $1(newValue) }
     }
     
-    /// projectedValue from @propertyWrapper to easily access value from Bindable instance
-    /// While mantaing exported value property for ImmutableBindable
-    public var projectedValue: BindingType {
-        get {
-            /*
-             * Note:
-             * If you try to directly unwrap currentValue it will crash with Optional BindingType.
-             * Contional casting on the other hand can have optional outcome with nil value in it.
-             */
-            return value as! BindingType
-        }
-        set {
-            update(newValue)
-        }
-    }
-    
     //MARK:- Builder methods
     public func observeOn<T>(_ sourceKeyPath: KeyPath<BindingType, T>) -> ObservableBuilder<BindingType, T> {
         return immutable.observeOn(sourceKeyPath)
-    }
-    
-    public func bindOn<O:AnyObject, R>(_ object: O, _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, BindingType, O, R> {
-        return bindOn(\BindingType.self, object, objectKeyPath)
     }
     
     public func bindOn<T, O:AnyObject, R>(_ sourceKeyPath: KeyPath<BindingType, T>, _ object: O, _ objectKeyPath: ReferenceWritableKeyPath<O, R>) -> BindableBuilder<BindingType, T, O, R> {

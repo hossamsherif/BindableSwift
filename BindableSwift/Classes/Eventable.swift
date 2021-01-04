@@ -80,9 +80,9 @@ public class ImmutableEventBindable<EventStateType> : ImmutableEventableBase<Eve
 /// The base class for ImmutableEventBindable can be extended and build your own Eventable if needed.
 /// Note in the sublclass of ImmutableEventableBase, it should override the signal function to call the action block
 /// Can be:
-/// -  signalled which return the associated bindable
-/// -  Add on event with an action block
-/// - bind on Event state
+/// - Signalled which return the associated bindable
+/// - Add on Event with an action block
+/// - Bind on Event state
 /// - calledAsFunction to signal
 public class ImmutableEventBindableBase<EventStateType, ActionType> {
     
