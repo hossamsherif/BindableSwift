@@ -113,10 +113,18 @@ public class ImmutableEventBindableBase<EventStateType, ActionType> {
     }
     
     @discardableResult
+    public func observe<R>(mapper: @escaping (EventStateType) -> R = { $0 as! R },
+                           _ span:Span = .always,
+                           disposableBag: DisposableBag? = nil,
+                           _ complection:@escaping (R) -> ()) -> Disposable {
+        return bindable.observe(mapper: mapper, span, disposableBag: disposableBag, complection)
+    }
+    
+    @discardableResult
     public func observe(_ span:Span = .always,
                         disposableBag: DisposableBag? = nil,
                         _ complection:@escaping (EventStateType) -> ()) -> Disposable {
-        return bindable.observe(span, disposableBag: disposableBag, complection)
+        return observe(mapper: { $0 }, span, disposableBag: disposableBag, complection)
     }
     
     /// valueChanged call back when UIControl value is changed

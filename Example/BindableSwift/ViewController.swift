@@ -9,8 +9,8 @@ import UIKit
 import BindableSwift
 
 protocol UserDefaultsManagerProtocol: class {
-    var appVersion: Bindable<String?> { get set }
-    var isFirstTime: Bindable<Bool> { get set }
+    var appVersion: Bindable<String?> { get }
+    var isFirstTime: Bindable<Bool> { get }
 }
 
 class UserDefaultsManager: UserDefaultsManagerProtocol {
@@ -133,7 +133,7 @@ class ViewController: UIViewController {
             .done()
         UserDefaultsManager.shared.isFirstTime
             .observeOn
-            .once
+            .always
             .disposableBag(disposableBag)
             .done {
                 print(">>>>>>", $0)
@@ -145,13 +145,12 @@ class ViewController: UIViewController {
         //            UserDefaultsManager.shared.isFirstTime.value = false
         //        }
         
-        viewModel.isLoading.bind(to: myView.loader, \.isHidden, mapper: { !$0 }, completion: { [weak self] isLoading in
-            guard let self = self else { return }
-            isLoading ? self.myView.loader.startAnimating() : self.myView.loader.stopAnimating()
-        })
-        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay, .always,completion:  { newValue in
+        viewModel.isLoading.bind(to: myView.loader, \.isHidden, mapper: { !$0 }) { [weak self] in
+            $0 ? self?.myView.loader.stopAnimating() : self?.myView.loader.startAnimating()
+        }
+        viewModel.name.bind(to: myView.textField, \.text, mode: .towWay, .always) { newValue in
             print(newValue)
-        })
+        }
         //        viewModel
         //            .input3
         //            .on(myView.button, for: .touchUpInside)
@@ -167,23 +166,24 @@ class ViewController: UIViewController {
         //
         
         
-        viewModel
-            .input3
-            .asBindable
-            .bind(to: myView.switchControl, \.isOn, mode: .oneWay, mapper: { $0.count%2==0 })
+//        viewModel
+//            .input3
+//            .asBindable
+//            .bind(to: myView.switchControl, \.isOn, mode: .oneWay, mapper: { $0.count%2==0 })
         
         
         
 //        viewModel.name.bind(to: myView.label, \.text, mapper:  { $0.isEmpty ? "" : "Mr. \($0)" }, .once)
         viewModel.name
             .bindOn(myView.label, \.text)
-            .map { $0.isEmpty ? "" : "Mr. \($0)" }
+            .map { $0.isEmpty.description }
             .always
-            .done()
+            .done{
+                print("@@@@ \($0 ?? "")")
+            }
         
         viewModel.name
             .observeOn
-            //            .map { $0.isEmpty ? "" : "Mr. \($0)" }
             .always
             .done {
                 print($0)
@@ -200,13 +200,9 @@ class ViewController: UIViewController {
         //        viewModel.myStruct.bind(\.name, to: myView.label, \.text, mapper: { $0.description })
         //        viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { $0.isEmpty })
         
-        viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { [weak self] _ in
-            guard let self = self else { return false }
-            return self.myView.switchControl.isOn
-        }, completion:{ [weak self] in
-            guard let self = self else { return }
-            self.myView.switchControl.setOn($0.isEmpty, animated: true)
-        })
+        viewModel.name.observe{ [weak self] in
+            self?.myView.switchControl.setOn($0.isEmpty, animated: true)
+        }
         
         viewModel.data.observe { [weak self] _ in
             guard let self = self else { return }

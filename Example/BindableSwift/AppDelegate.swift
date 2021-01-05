@@ -28,7 +28,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window.rootViewController = UINavigationController(rootViewController:  ViewController.create())
         window.makeKeyAndVisible()
         self.window = window
-        return true
+//        return true
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
             guard let self = self else { return }
             self.window?.rootViewController = UINavigationController(rootViewController: ViewController.create())
