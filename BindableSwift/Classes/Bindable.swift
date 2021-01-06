@@ -199,6 +199,9 @@ public extension AbastractBindable {
     }
 }
 
+let defaultQueue = DispatchQueue.init(label: "com.bindale-swift.default", qos: .default, attributes: .concurrent)
+let bgQueue = DispatchQueue.init(label: "com.bindale-swift.background", qos: .background, attributes: .concurrent)
+let mainQueue = DispatchQueue.main
 
 /// Bindable<BindingType> generic mutable binding
 /// Typically should be used in viewModels by `_` prefix when used as propertyWrapper to be able to access value setter
@@ -255,7 +258,9 @@ public class Bindable<BindingType>: AbastractBindable {
     public func update(_ newValue:BindingType) {
         lock.lock(); defer{lock.unlock()}
         immutable.currentValue = newValue
-        immutable.observers.forEach{ $1(newValue) }
+        defaultQueue.async { [weak self] in
+            self?.immutable.observers.forEach{ $1(newValue) }
+        }
     }
     
     //MARK:- Builder methods
@@ -376,8 +381,10 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
                            _ span: Span = .always,
                            disposableBag: DisposableBag? = nil,
                            _ completion: @escaping (T) -> ()) -> Disposable {
-        return observeCommon(sourceKeyPath, span, disposableBag: disposableBag) {
-            completion($0[keyPath: sourceKeyPath])
+        return observeCommon(sourceKeyPath, span, disposableBag: disposableBag) { newValue in
+            mainQueue.async {
+                completion(newValue[keyPath: sourceKeyPath])
+            }
         }
     }
     
@@ -389,7 +396,9 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
                               _ completion: @escaping (R) -> ()) -> Disposable {
         return observeCommon(sourceKeyPath, span, disposableBag: disposableBag) {
             let mapped = mapper($0[keyPath: sourceKeyPath])
-            completion(mapped)
+            mainQueue.async {
+                completion(mapped)
+            }
         }
         
     }
@@ -406,9 +415,11 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
             self.observers.removeValue(forKey: secondaryKey)
         }
         var currentSpan = span
-        observers[secondaryKey] = { [weak disposable] in
-            handler($0)
-            if currentSpan.tik() { disposable?.dispose() }
+        observers[secondaryKey] = { [weak disposable] newValue in
+            defaultQueue.async {
+                handler(newValue)
+                if currentSpan.tik() { disposable?.dispose() }
+            }
         }
         return disposable
     }
@@ -440,8 +451,10 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
             guard let object = object else { return }
             let value = observed[keyPath: sourceKeyPath]
             let mapped = mapper(value)
-            object[keyPath: objectKeyPath] = mapped
-            completion?(mapped)
+            mainQueue.async {
+                object[keyPath: objectKeyPath] = mapped
+                completion?(mapped)
+            }
         }
     }
     
@@ -458,8 +471,10 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
         return addObserver(for: object, objectKeyPath, mode, span, disposableBag: disposableBag) { [weak object] observed in
             guard let object = object else { return }
             let value = observed[keyPath: sourceKeyPath]
-            object[keyPath: objectKeyPath] = value as! R
-            completion?(value)
+            mainQueue.async {
+                object[keyPath: objectKeyPath] = value as! R
+                completion?(value)
+            }
         }
     }
     
@@ -509,11 +524,15 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
             self.unbind(from: object, objectKeyPath, mode: mode)
         }
         var currentSpan = span
-        observers[secondaryKey] = { [weak disposable] in
-            completion($0)
-            if currentSpan.tik() {
-                disposable?.dispose()
+        observers[secondaryKey] = { [weak disposable] newValue in
+            defaultQueue.async {
+                completion(newValue)
+                if currentSpan.tik() {
+                    disposable?.dispose()
+                }
             }
+            
+            
         }
         return disposable
     }
@@ -551,12 +570,16 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     /// remove tow way bind from an object
     /// - Parameter object: object to remove binding from
     fileprivate func removeTowWayBind<O: AnyObject>(_ object: O) {
-        if let control = object as? UIControl {
-            control.removeTarget(self, action: #selector(valueChanged), for: [.editingChanged, .valueChanged])
-        }else if object is UITextView { //UITextView case since it is not part of UIControl
-            NotificationCenter.default.removeObserver(self, name: UITextView.textDidChangeNotification, object: nil)
+        mainQueue.async { [weak self] in
+            guard let self = self else { return }
+            if let control = object as? UIControl {
+                control.removeTarget(self, action: #selector(self.valueChanged), for: [.editingChanged, .valueChanged])
+            }else if object is UITextView { //UITextView case since it is not part of UIControl
+                NotificationCenter.default.removeObserver(self, name: UITextView.textDidChangeNotification, object: nil)
+            }
+            self.keyPath = nil
         }
-        keyPath = nil
+        
     }
 }
 
