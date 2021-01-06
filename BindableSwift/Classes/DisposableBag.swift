@@ -55,13 +55,15 @@ class DisposableUnit: Disposable {
     //MARK:- Public methods
     /// Dispose a Bindable instance
     public func dispose() {
-        print("before: \(disposableBag?.container.count ?? -1)")
-        guard !isDisposed else { return }
-        isDisposed = true
-        disposeBlock?()
-        disposableBag?.remove(keyPair: keyPair)
-        print("after: \(disposableBag?.container.count ?? -1)")
-        disposableBag = nil
+        defaultQueue.sync {
+            print("before: \(disposableBag?.container.count ?? -1)")
+            guard !isDisposed else { return }
+            isDisposed = true
+            disposeBlock?()
+            disposableBag?.remove(keyPair: keyPair)
+            print("after: \(disposableBag?.container.count ?? -1)")
+            disposableBag = nil
+        }
     }
 }
 

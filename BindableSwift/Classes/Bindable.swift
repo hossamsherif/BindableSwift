@@ -199,8 +199,8 @@ public extension AbastractBindable {
     }
 }
 
-let defaultQueue = DispatchQueue.init(label: "com.bindale-swift.default", qos: .default, attributes: .concurrent)
-let bgQueue = DispatchQueue.init(label: "com.bindale-swift.background", qos: .background, attributes: .concurrent)
+let defaultQueue = DispatchQueue(label: "com.bindale-swift.default", qos: .default, attributes: .concurrent)
+let bgQueue = DispatchQueue(label: "com.bindale-swift.background", qos: .background, attributes: .concurrent)
 let mainQueue = DispatchQueue.main
 
 /// Bindable<BindingType> generic mutable binding
