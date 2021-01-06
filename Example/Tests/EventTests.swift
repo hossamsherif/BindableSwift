@@ -61,5 +61,69 @@ class EventTests: XCTestCase {
         target.sendActions(for: .editingChanged)
         XCTAssertEqual(capturedText, testValue)
     }
-
+    
+    func testOnGesture() {
+        let exp = expectation(description: "testOnGesture")
+        let tapGesture = UITapGestureRecognizer()
+        let target = UIView()
+        var tapActionCalled = false
+        $sut = {
+            tapActionCalled = true
+            exp.fulfill()
+        }
+        sut.on(tapGesture, on: target)
+        tapGesture.state = .ended
+        waitForExpectations(timeout: 0.1) { (error) in
+            XCTAssertNil(error)
+            XCTAssertTrue(tapActionCalled)
+        }
+    }
+    
+    func onEventGesture( _ eventGesture: EventGesture, on view: UIView) {
+        let exp = expectation(description: "onEventGesture\(eventGesture)")
+        var eventActionCalled = false
+        $sut = {
+            eventActionCalled = true
+            exp.fulfill()
+        }
+        XCTAssertEqual((view.gestureRecognizers?.count ?? 0),  0)
+        sut.on(eventGesture, on: view)
+        //Assert view UserInteractionEnabled and has gestureRecognizer added
+        XCTAssertTrue(view.isUserInteractionEnabled)
+        XCTAssertEqual((view.gestureRecognizers?.count ?? 0),  1)
+        //Simulate gesture state ended to fire
+        view.gestureRecognizers?.first?.state = .ended
+        //Wait for expectations fulfillment
+        waitForExpectations(timeout: 0.1) { (error) in
+            XCTAssertNil(error)
+            XCTAssertTrue(eventActionCalled)
+        }
+    }
+    
+    func testOnEventGestureTap() {
+        onEventGesture(.tap, on: UIView())
+    }
+    
+    func testOnEventGesturePinch() {
+        onEventGesture(.pinch, on: UIView())
+    }
+    
+    func testOnEventGestureRotaion() {
+        onEventGesture(.rotaion, on: UIView())
+    }
+    func testOnEventGestureSwipe() {
+        onEventGesture(.swipe, on: UIView())
+    }
+    func testOnEventGesturePan() {
+        onEventGesture(.pan, on: UIView())
+    }
+    func testOnEventGestureScreenEdgePan() {
+        onEventGesture(.screenEdgePan, on: UIView())
+    }
+    func testOnEventGestureLongPress() {
+        onEventGesture(.longPress, on: UIView())
+    }
+    func testOnEventGestureCustom() {
+        onEventGesture(.custom(gesture: UITapGestureRecognizer()), on: UIView())
+    }
 }
