@@ -408,17 +408,20 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
                                   disposableBag: DisposableBag? = nil,
                                   _ handler: @escaping (BindingType) -> ()) -> Disposable {
         //Invoke completion for first time on currentValue (if any)
-        currentValue.map { handler($0) }
+        
         let secondaryKey = UUID().uuidString
         let disposable: Disposable = DisposableUnit(primaryKey, secondaryKey, disposableBag: disposableBag) { [weak self] in
             guard let self = self else { return }
             self.observers.removeValue(forKey: secondaryKey)
         }
-        var currentSpan = span
-        observers[secondaryKey] = { [weak disposable] newValue in
-            defaultQueue.async {
-                handler(newValue)
-                if currentSpan.tik() { disposable?.dispose() }
+        defaultQueue.async { [weak self] in
+            self?.currentValue.map { handler($0) }
+            var currentSpan = span
+            self?.observers[secondaryKey] = { [weak disposable] newValue in
+                defaultQueue.async {
+                    handler(newValue)
+                    if currentSpan.tik() { disposable?.dispose() }
+                }
             }
         }
         return disposable
@@ -518,22 +521,24 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
         let disposableBag = disposableBag ?? .shared
         disposableBag.dispose(secondaryKey: secondaryKey)
         //Invoke completion for first time on currentValue (if any)
-        currentValue.map { completion($0) }
+        
         let disposable: Disposable = DisposableUnit(primaryKey, secondaryKey, disposableBag: disposableBag) { [weak self, weak object] in
             guard let self = self, let object = object else { return }
             self.unbind(from: object, objectKeyPath, mode: mode)
         }
-        var currentSpan = span
-        observers[secondaryKey] = { [weak disposable] newValue in
-            defaultQueue.async {
-                completion(newValue)
-                if currentSpan.tik() {
-                    disposable?.dispose()
+        defaultQueue.async { [weak self] in
+            self?.currentValue.map { completion($0) }
+            var currentSpan = span
+            self?.observers[secondaryKey] = { [weak disposable] newValue in
+                defaultQueue.async {
+                    completion(newValue)
+                    if currentSpan.tik() {
+                        disposable?.dispose()
+                    }
                 }
             }
-            
-            
         }
+        
         return disposable
     }
     
