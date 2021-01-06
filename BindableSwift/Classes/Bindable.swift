@@ -225,9 +225,10 @@ public class Bindable<BindingType>: AbastractBindable {
             /*
              * Note:
              * If you try to directly unwrap currentValue it will crash with Optional BindingType.
-             * Contional casting on the other hand can have optional outcome with nil value in it.
+             * Condional casting on the other hand can have optional outcome with storing nil value.
              */
-            return value as! BindingType
+//            return value as! BindingType
+            return value!
         }
         set {
             update(newValue)

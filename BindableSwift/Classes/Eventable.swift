@@ -113,6 +113,17 @@ public class ImmutableEventBindableBase<EventStateType, ActionType> {
     }
     
     @discardableResult
+    public func on<G: UIGestureRecognizer, V: UIView>(_ gesture: G, on view:V? = nil, _ disposableBag: DisposableBag? = nil) -> Self {
+        return on(.custom(gesture: gesture), on: view, disposableBag)
+    }
+    
+    @discardableResult
+    public func on<V: UIView>(_ eventGesture: EventGesture, on view:V? = nil, _ disposableBag: DisposableBag? = nil) -> Self {
+        on(selector: #selector(self.valueChanged(sender:)), eventGesture, on: view, disposableBag)
+        return self
+    }
+    
+    @discardableResult
     public func observe<R>(mapper: @escaping (EventStateType) -> R = { $0 as! R },
                            _ span:Span = .always,
                            disposableBag: DisposableBag? = nil,
@@ -130,7 +141,7 @@ public class ImmutableEventBindableBase<EventStateType, ActionType> {
     /// valueChanged call back when UIControl value is changed
     /// - Parameter sender: changed UIControl object
     /// - Parameter event: associated event that initiated this call
-    @objc fileprivate func valueChanged(sender: UIControl) {
+    @objc fileprivate func valueChanged(sender: Any) {
         signal()
     }
     

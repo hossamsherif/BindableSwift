@@ -42,14 +42,14 @@
 /* Begin PBXFileReference section */
 		074A9D51FE2C1229E456202E407CB862 /* Pods-BindableSwift_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-BindableSwift_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		0B479AF101A7DEBB4ACD0F73639B03A5 /* Pods-BindableSwift_Tests-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-BindableSwift_Tests-acknowledgements.markdown"; sourceTree = "<group>"; };
-		0C64A8CD8CBE92A906192FAF8F1039B7 /* Pods_BindableSwift_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Pods_BindableSwift_Example.framework; path = "Pods-BindableSwift_Example.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0C64A8CD8CBE92A906192FAF8F1039B7 /* Pods_BindableSwift_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BindableSwift_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C90678321BBB21DC12BA569A8F80CDC /* Pods-BindableSwift_Tests.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-BindableSwift_Tests.modulemap"; sourceTree = "<group>"; };
 		152135A420D99DFD1C4995449C2CDD74 /* BindableSwift-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "BindableSwift-prefix.pch"; sourceTree = "<group>"; };
 		3A8287FD67B880E10C0D4DB0D659DCD7 /* BindableSwift.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = BindableSwift.debug.xcconfig; sourceTree = "<group>"; };
 		4730A2C4BC4DD518A20F745C21EB301B /* Pods-BindableSwift_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-BindableSwift_Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		47FB5CF4331FA6289C6534F4607B6A73 /* Event.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Event.swift; path = BindableSwift/Classes/Event.swift; sourceTree = "<group>"; };
 		48D6F3DF2EE95C18B150EB1BD46D4C83 /* Eventable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Eventable.swift; path = BindableSwift/Classes/Eventable.swift; sourceTree = "<group>"; };
-		4CD56883D0093B6F35733D0C84BE936F /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; path = README.md; sourceTree = "<group>"; };
+		4CD56883D0093B6F35733D0C84BE936F /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		56175BF0F6F51B844AB78766F090C1D0 /* BindableSwift-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "BindableSwift-Info.plist"; sourceTree = "<group>"; };
 		59163CEB6CF791783F55364BDEC97E41 /* BindableSwift.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = BindableSwift.modulemap; sourceTree = "<group>"; };
 		592D65F73B3F43A57DD86D7D10C986D0 /* BindableSwift.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = BindableSwift.release.xcconfig; sourceTree = "<group>"; };
@@ -58,21 +58,21 @@
 		689052820E669ADB252500F0C5BF69A3 /* Pods-BindableSwift_Tests-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-BindableSwift_Tests-acknowledgements.plist"; sourceTree = "<group>"; };
 		6A78276C3AC666391C1C252D94BE1C2A /* Pods-BindableSwift_Tests-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-BindableSwift_Tests-dummy.m"; sourceTree = "<group>"; };
 		73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		79563BAED9A9838C9AFD28BF1D7E1072 /* Pods_BindableSwift_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Pods_BindableSwift_Tests.framework; path = "Pods-BindableSwift_Tests.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
-		7D84397D5837A7DD9E8536A4A407D0CE /* BindableSwift.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; path = BindableSwift.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		79563BAED9A9838C9AFD28BF1D7E1072 /* Pods_BindableSwift_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BindableSwift_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		7D84397D5837A7DD9E8536A4A407D0CE /* BindableSwift.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; path = BindableSwift.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		7E681F0F5F27E38CF21B41014DD1E4E7 /* Pods-BindableSwift_Example.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-BindableSwift_Example.modulemap"; sourceTree = "<group>"; };
 		801D7721FD68E0880C5BEA8C7EEB8935 /* Pods-BindableSwift_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-BindableSwift_Example.release.xcconfig"; sourceTree = "<group>"; };
 		8A9EFF25E274D06CD1DC74FEA22EDD62 /* Pods-BindableSwift_Example-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-BindableSwift_Example-acknowledgements.markdown"; sourceTree = "<group>"; };
 		8B6A9F6DA39EC06610AA14DD0CC250EC /* Pods-BindableSwift_Tests-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-BindableSwift_Tests-Info.plist"; sourceTree = "<group>"; };
 		9242A46CDF4BD14F43B1F9A638636830 /* Pods-BindableSwift_Example-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-BindableSwift_Example-acknowledgements.plist"; sourceTree = "<group>"; };
-		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
-		A6A882BF56E1A05B6B765C3AD9C18AA1 /* BindableSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = BindableSwift.framework; path = BindableSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		A6A882BF56E1A05B6B765C3AD9C18AA1 /* BindableSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BindableSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8F93C3A820EDD0C2F9C1C1A52D2C922 /* Pods-BindableSwift_Example-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-BindableSwift_Example-frameworks.sh"; sourceTree = "<group>"; };
 		ABE7E6C84D672770F78A418920A89E83 /* Pods-BindableSwift_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-BindableSwift_Tests.release.xcconfig"; sourceTree = "<group>"; };
 		C2F243D0A1970C98ACF93F2C205EA3C8 /* Pods-BindableSwift_Example-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-BindableSwift_Example-umbrella.h"; sourceTree = "<group>"; };
 		D68D25816004E9462C2A6E5D63ACD038 /* DisposableBag.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DisposableBag.swift; path = BindableSwift/Classes/DisposableBag.swift; sourceTree = "<group>"; };
 		DEE4965B3D2F9BD8EBD5F4EAC068290D /* Pods-BindableSwift_Tests-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-BindableSwift_Tests-umbrella.h"; sourceTree = "<group>"; };
-		E062AB11BD0B456AE6F82399FF892D6A /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE; sourceTree = "<group>"; };
+		E062AB11BD0B456AE6F82399FF892D6A /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		E2A8686957E69F413A4993BA30F053E7 /* Pods-BindableSwift_Example-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-BindableSwift_Example-Info.plist"; sourceTree = "<group>"; };
 		E7910E20BED7FE360FDE47BA0E60A8D5 /* Pods-BindableSwift_Example-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-BindableSwift_Example-dummy.m"; sourceTree = "<group>"; };
 		F10A6CA90FA9DF16FE7439F2F206546C /* Bindable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Bindable.swift; path = BindableSwift/Classes/Bindable.swift; sourceTree = "<group>"; };
@@ -325,7 +325,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1100;
-				LastUpgradeCheck = 1100;
+				LastUpgradeCheck = 1220;
 			};
 			buildConfigurationList = 4821239608C13582E20E6DA73FD5F1F9 /* Build configuration list for PBXProject "Pods" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -422,7 +422,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 3A8287FD67B880E10C0D4DB0D659DCD7 /* BindableSwift.debug.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
@@ -455,7 +454,6 @@
 			baseConfigurationReference = 074A9D51FE2C1229E456202E407CB862 /* Pods-BindableSwift_Example.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
@@ -489,7 +487,6 @@
 			baseConfigurationReference = ABE7E6C84D672770F78A418920A89E83 /* Pods-BindableSwift_Tests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
@@ -523,7 +520,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 592D65F73B3F43A57DD86D7D10C986D0 /* BindableSwift.release.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
@@ -557,7 +553,6 @@
 			baseConfigurationReference = 4730A2C4BC4DD518A20F745C21EB301B /* Pods-BindableSwift_Tests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
@@ -641,8 +636,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_INSTALLED_PRODUCT = NO;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 5.0;
 				SYMROOT = "${SRCROOT}/../build";
 			};
@@ -719,7 +713,6 @@
 			baseConfigurationReference = 801D7721FD68E0880C5BEA8C7EEB8935 /* Pods-BindableSwift_Example.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";

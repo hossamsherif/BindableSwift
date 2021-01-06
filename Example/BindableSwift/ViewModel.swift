@@ -130,12 +130,14 @@ class ViewModel: ViewModelProtocol {
     
     func viewDidLoadHanlding() {
         $isLoading = true
-        MainThread(self, after: .now() + 3.0) { (self) in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+            guard let self = self else { return }
             self.$isLoading = false
             self.$name = "Hossam Sherif"
         }
 
-        MainThread(self, after: .now() + 5.0) { (self) in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { [weak self] in
+            guard let self = self else { return }
             self.$data.insert(CellViewMode(title: "7amada"), at: 0)
             self.$myStruct.name = "XYZ"
         }
@@ -162,19 +164,5 @@ class CellViewMode: CellViewModelProtocol {
     }
     init(title: Bindable<String>) {
         _title = title
-    }
-}
-
-public func MainThread<`self`: AnyObject>(_ on:`self`, _ block:@escaping (`self`)->()) {
-    DispatchQueue.main.async { [weak on] in
-        guard let on = on else { return }
-        block(on)
-    }
-}
-
-public func MainThread<self: AnyObject>(_ `self`: `self`, after: DispatchWallTime, _ block:@escaping (`self`)->()) {
-    DispatchQueue.main.asyncAfter(wallDeadline: after)  { [weak self] in
-        guard let self = self else { return }
-        block(self)
     }
 }

@@ -248,6 +248,9 @@ class ViewController: UIViewController {
         //        viewModel.shouldGoToVC.observe(\Bool.self) { [weak self] in
         //            $0 ? self?.navigationController?.pushViewController(ViewController.create(), animated: true) : ()
         //        }
+        
+//        let tap = UITapGestureRecognizer()
+        viewModel.input2.on(.tap, on: myView.label)
     }
 }
 
