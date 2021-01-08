@@ -31,8 +31,8 @@ public class EventBindable<EventStateType> {
     public var wrappedValue: Immutable { return immutable }
     
     public var projectedValue: ActionType {
-        get { return immutable.action }
-        set { immutable.action = newValue }
+        get { return action }
+        set { action = newValue }
     }
     
     /// default Init for Eventable
@@ -60,15 +60,14 @@ public class ImmutableEventBindable<EventStateType> : ImmutableEventableBase<Eve
     /// - Parameters:
     ///   - action: action block that should be called when signalled or `on(_:f,or:_)`'s event is fired
     ///   - eventStateValue: The associated value for this ImmutableEvent's Bindable
-    override public init(_ eventStateValue: EventStateType? = nil, _ action: @escaping ActionType = {_ in}) {
+    override public init(_ eventStateValue: EventStateType? = nil, _ action: @escaping ActionType) {
         super.init(eventStateValue, action)
     }
     
     @discardableResult
     public override func signal() -> ImmutableBindable {
         action { [weak self] eventState in
-            guard let self = self else { return }
-            self.bindable.update(eventState)
+            self?.bindable.update(eventState)
         }
         return asBindable
     }
@@ -124,7 +123,7 @@ public class ImmutableEventBindableBase<EventStateType, ActionType> {
     }
     
     @discardableResult
-    public func observe<R>(mapper: @escaping (EventStateType) -> R = { $0 as! R },
+    public func observe<R>(mapper: @escaping (EventStateType) -> R,
                            _ span:Span = .always,
                            disposableBag: DisposableBag? = nil,
                            _ complection:@escaping (R) -> ()) -> Disposable {
@@ -148,7 +147,7 @@ public class ImmutableEventBindableBase<EventStateType, ActionType> {
     @discardableResult
     public func signal() -> ImmutableBindable {
         //*** Note this function should be overriden from any subclass to call action ***
-        bindable.immutable
+        asBindable
     }
 }
 

@@ -109,8 +109,8 @@ public class Event {
     public var wrappedValue: Immutable { return immutable }
     
     public var projectedValue: ActionType {
-        get { return immutable.action }
-        set { immutable.action = newValue }
+        get { return action }
+        set { action = newValue }
     }
     
     /// Main int for Event property wrapper
@@ -133,7 +133,7 @@ public class ImmutableEvent {
     
     /// Main int for ImmutableEvent
     /// - Parameter action: Action block value of type ActionType - default to empty block
-    public init(_ action: @escaping ActionType = {}) { self.action = action }
+    public init(_ action: @escaping ActionType) { self.action = action }
     
     deinit { DisposableBag.dispose(self) }
     

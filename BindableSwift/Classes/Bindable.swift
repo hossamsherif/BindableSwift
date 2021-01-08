@@ -269,7 +269,7 @@ public class Bindable<BindingType>: AbastractBindable {
     
     @discardableResult
     public func observe<T, R>(_ sourceKeyPath: KeyPath<BindingType, T>,
-                              mapper: @escaping (T) -> R = { $0 as! R },
+                              mapper: @escaping (T) -> R,
                               _ span:Span = .always,
                               disposableBag: DisposableBag? = nil,
                               _ completion: @escaping (R) -> ()) -> Disposable {

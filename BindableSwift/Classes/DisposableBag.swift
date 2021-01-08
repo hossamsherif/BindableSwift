@@ -18,9 +18,9 @@ public protocol Disposable: class {
 class DisposableUnit: Disposable {
     //MARK:- Private properties
     public var isDisposed = false
-    private var keyPair: KeyPair
-    private weak var disposableBag: DisposableBag?
-    private var disposeBlock: (() -> ())?
+    private(set) var keyPair: KeyPair
+    private(set) weak var disposableBag: DisposableBag?
+    private(set) var disposeBlock: (() -> ())?
     
     //MARK:- Internal initializer
     
@@ -55,12 +55,12 @@ class DisposableUnit: Disposable {
     //MARK:- Public methods
     /// Dispose a Bindable instance
     public func dispose() {
-        print("before: \(disposableBag?.container.count ?? -1)")
+//        print("before: \(disposableBag?.container.count ?? -1)")
         guard !isDisposed else { return }
         isDisposed = true
         disposeBlock?()
         disposableBag?.remove(keyPair: keyPair)
-        print("after: \(disposableBag?.container.count ?? -1)")
+//        print("after: \(disposableBag?.container.count ?? -1)")
         disposableBag = nil
     }
 }
@@ -76,7 +76,7 @@ struct KeyPair: Hashable {
 public class DisposableBag {
     //MARK:- Private properties
     /// Main DisposableBag container
-    var container = [KeyPair: DisposableUnit]()
+    var container = [KeyPair: Disposable]()
     private let lock = NSRecursiveLock()
     
     //MARK:- singleton
@@ -104,24 +104,25 @@ public class DisposableBag {
     /// Short hand for dispose(primaryKey: )
     /// - Parameter referenceObject: primaryKey of diposeBlock(s) to dispose
     public func dispose(_ referenceObject: AnyObject) {
-        get(primaryKey: ObjectIdentifier(referenceObject))?.forEach { $0.value.dispose() }
+        let primaryKey = ObjectIdentifier(referenceObject)
+        get(primaryKey: primaryKey)?.forEach { $0.value.dispose() }
     }
     
     //MARK:- Getters
-    func get(primaryKey:ObjectIdentifier) -> [KeyPair: DisposableUnit]? {
+    func get(primaryKey:ObjectIdentifier) -> [KeyPair: Disposable]? {
         return container.filter { $0.key.primary == primaryKey }
     }
     
-    func get(secondaryKey:String) -> [KeyPair: DisposableUnit]? {
+    func get(secondaryKey:String) -> [KeyPair: Disposable]? {
         return container.filter { $0.key.secondary == secondaryKey }
     }
     
-    func get(_ primaryKey: ObjectIdentifier,_ secondaryKey: String) -> DisposableUnit? {
+    func get(_ primaryKey: ObjectIdentifier,_ secondaryKey: String) -> Disposable? {
         return container[KeyPair(primary: primaryKey, secondary: secondaryKey)]
     }
     
     //MARK:- Setter
-    func set(_ primaryKey:ObjectIdentifier, _ secondaryKey: String, value: DisposableUnit)  {
+    func set(_ primaryKey:ObjectIdentifier, _ secondaryKey: String, value: Disposable)  {
         lock.lock(); defer { lock.unlock() }
         let key = KeyPair(primary: primaryKey, secondary: secondaryKey)
         container[key] = value

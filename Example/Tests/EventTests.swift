@@ -22,13 +22,46 @@ class EventTests: XCTestCase {
         DisposableBag.dispose(sut)
     }
     
+    func testInitWithAction() {
+        var i = 0
+        let testValue = 1
+        _sut = Event({
+            i = testValue
+        })
+        sut()
+        XCTAssertEqual(i, testValue)
+    }
+    
+    func testInitDefault() {
+        var i = 0
+        let testValue = 1
+        _sut = Event()
+        $sut = { i = testValue }
+        sut.signal()
+        XCTAssertEqual(i, testValue)
+    }
+    
+    func testProjectedValueSet() {
+        var i = 0
+        let testValue = 1
+        $sut = { i = testValue }
+        _sut.action()
+        XCTAssertEqual(i, testValue)
+    }
+    
+    func testProjectedValueGet() {
+        var i = 0
+        let testValue = 1
+        $sut = { i = testValue }
+        $sut()
+        XCTAssertEqual(i, testValue)
+    }
     
     func testCallableAsFuntion() {
         var i = 0
         let testValue = 1
         $sut = { i = testValue }
-        //Call as function
-        sut()
+        sut() //Call as function
         XCTAssertEqual(i, testValue)
     }
     
@@ -78,6 +111,18 @@ class EventTests: XCTestCase {
             XCTAssertTrue(tapActionCalled)
         }
     }
+    
+    func testOnGestureDispose() {
+        let tapGesture = UITapGestureRecognizer()
+        let target = UIView()
+        var tapActionCalled = false
+        $sut = { tapActionCalled = true }
+        let disposeable = sut.on(tapGesture, on: target)
+        disposeable.dispose()
+        XCTAssertEqual(target.gestureRecognizers?.isEmpty, true)
+        XCTAssertFalse(tapActionCalled)
+    }
+
     
     func onEventGesture( _ eventGesture: EventGesture, on view: UIView) {
         let exp = expectation(description: "onEventGesture\(eventGesture)")

@@ -11,34 +11,73 @@ import XCTest
 
 class EventableTests: XCTestCase {
     
+    @Eventable<Bool> var sut
+    
+    override func setUpWithError() throws {
+        _sut = Eventable<Bool>()
+    }
+    
+    override func tearDownWithError() throws {
+        DisposableBag.shared.container.removeAll()
+    }
+    
     func testCallableAsFunction() {
-        let provider = EventableProvider<Bool>()
         var target = false
         let testValue = true
-        provider.$sut = { $0(testValue) }
-        provider.sut.observe { target = $0 }
-        provider.sut()
+        $sut = { $0(testValue) }
+        sut.observe { target = $0 }
+        sut()
         XCTAssertEqual(target, testValue)
     }
 
     func testSignallable() {
-        let provider = EventableProvider<Bool>()
         var target = false
         let testValue = true
-        provider.$sut = { $0(testValue) }
-        provider.sut.observe { target = $0 }
-        provider.sut.signal()
+        $sut = { $0(testValue) }
+        sut.observe { target = $0 }
+        sut.signal()
         XCTAssertEqual(target, testValue)
     }
     
+    func testEventableProjectedValueSet() {
+        var target = false
+        let testValue = true
+        $sut = { $0(testValue) }
+        sut.observe { target = $0 }
+        sut.signal()
+        XCTAssertEqual(target, testValue)
+    }
+    
+    func testEventableProjectedValueGet() {
+        var target = false
+        let testValue = true
+        $sut = { $0(testValue) }
+        $sut { target = $0 }
+        XCTAssertEqual(target, testValue)
+    }
+    
+    func testEventableDeinit() {
+        XCTAssertTrue(DisposableBag.shared.container.isEmpty)
+        var provider: EventableProvider<Bool>? = EventableProvider<Bool>()
+        var target = false
+        let testValue = true
+        provider?.$sut = { $0(testValue) }
+        provider?.sut.observe { target = $0 }
+        provider?.sut.signal()
+        XCTAssertEqual(DisposableBag.shared.container.count, 1)
+        XCTAssertEqual(target, testValue)
+        provider = nil
+        XCTAssertTrue(DisposableBag.shared.container.isEmpty)
+
+    }
+    
     func testOnableWithButton() {
-        let provider = EventableProvider<Bool>()
         let target = UIButton()
         var triggered = false
         let testValue = true
-        provider.$sut = { $0(testValue) }
-        provider.sut.observe{ triggered = $0 }
-        provider.sut.on(target, for: .touchUpInside)
+        $sut = { $0(testValue) }
+        sut.observe{ triggered = $0 }
+        sut.on(target, for: .touchUpInside)
         target.sendActions(for: .touchUpInside)
         XCTAssertEqual(triggered, testValue)
     }
@@ -60,40 +99,40 @@ class EventableTests: XCTestCase {
     }
     
     func testOnGesture() {
-        let provider = EventableProvider(false)
         let exp = expectation(description: "testOnGesture")
         let tapGesture = UITapGestureRecognizer()
         let target = UIView()
-        provider.$sut = { stateHander in
+        $sut = { stateHander in
             stateHander(true)
             exp.fulfill()
         }
-        provider.sut.on(tapGesture, on: target)
+        sut.on(tapGesture, on: target)
         tapGesture.state = .ended
-        waitForExpectations(timeout: 0.1) { (error) in
+        waitForExpectations(timeout: 0.1) { [weak self] (error) in
+            guard let self = self else { return }
             XCTAssertNil(error)
-            XCTAssertTrue(provider.sut.asBindable.value!)
+            XCTAssertTrue(self.sut.asBindable.value!)
         }
     }
     
     func onEventGesture( _ eventGesture: EventGesture, on view: UIView) {
         let exp = expectation(description: "onEventGesture\(eventGesture)")
-        let provider = EventableProvider(false)
-        provider.$sut = { stateHander in
+        $sut = { stateHander in
             stateHander(true)
             exp.fulfill()
         }
         XCTAssertEqual((view.gestureRecognizers?.count ?? 0),  0)
-        provider.sut.on(eventGesture, on: view)
+        sut.on(eventGesture, on: view)
         //Assert view UserInteractionEnabled and has gestureRecognizer added
         XCTAssertTrue(view.isUserInteractionEnabled)
         XCTAssertEqual((view.gestureRecognizers?.count ?? 0),  1)
         //Simulate gesture state ended to fire
         view.gestureRecognizers?.first?.state = .ended
         //Wait for expectations fulfillment
-        waitForExpectations(timeout: 0.1) { (error) in
+        waitForExpectations(timeout: 0.1) { [weak self] (error) in
+            guard let self = self else { return }
             XCTAssertNil(error)
-            XCTAssertTrue(provider.sut.asBindable.value!)
+            XCTAssertTrue(self.sut.asBindable.value!)
         }
     }
     
