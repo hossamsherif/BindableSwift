@@ -11,6 +11,43 @@ import UIKit
 import BindableSwift
 
 
+public final class ObjectAssociation<T: AnyObject> {
+
+    private let policy: objc_AssociationPolicy
+
+    /// - Parameter policy: An association policy that will be used when linking objects.
+    public init(policy: objc_AssociationPolicy = .OBJC_ASSOCIATION_RETAIN_NONATOMIC) {
+        self.policy = policy
+    }
+
+    /// Accesses associated object.
+    /// - Parameter index: An object whose associated object is to be accessed.
+    public subscript(index: AnyObject) -> T? {
+        get { return objc_getAssociatedObject(index, Unmanaged.passUnretained(self).toOpaque()) as! T? }
+        set { objc_setAssociatedObject(index, Unmanaged.passUnretained(self).toOpaque(), newValue, policy) }
+    }
+}
+
+public extension UIScrollView {
+    private struct Holder {
+        static let bindable = ObjectAssociation<Bindable<CGPoint>>()
+        static let kvo = ObjectAssociation<NSKeyValueObservation>()
+    }
+    var contentOffsetBindable:Bindable<CGPoint>.Immutable {
+        guard let bindable = Holder.bindable[self] else {
+            let bindable = Bindable<CGPoint>()
+            Holder.kvo[self] = observe(\.contentOffset, options: .new) { [weak bindable] (_, change) in
+                guard let newValue = change.newValue else { return }
+                bindable?.update(newValue)
+            }
+            Holder.bindable[self] = bindable
+            return bindable.immutable
+        }
+        return  bindable.immutable
+    }
+}
+
+
 class BSScrollView: UIScrollView {
     weak var delegateProxy:UIScrollViewDelegate?
     var didScrollAction: ((CGPoint) -> ())?

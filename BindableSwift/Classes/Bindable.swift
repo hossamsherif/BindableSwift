@@ -208,7 +208,7 @@ public class Bindable<BindingType>: AbastractBindable {
     //MARK:- Properties
     
     /// BindableImmutable instance
-    var immutable: Immutable
+    public private(set) var immutable: Immutable
     
     private let lock = NSRecursiveLock()
     
@@ -245,7 +245,7 @@ public class Bindable<BindingType>: AbastractBindable {
         self.immutable = ImmutableBindable(value)
     }
     
-    /// represent current value and changes to this property will publish updated value to all observers
+    /// represent current value.
     public var value:BindingType? {
         get {
             return immutable.currentValue
@@ -436,7 +436,7 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
                                          _ completion: ((R) -> ())? = nil) -> Disposable {
         
         if mode == .towWay { addTowWayBinding(object, objectKeyPath) }
-        return addObserver(for: object, objectKeyPath, mode, span, disposableBag: disposableBag) { [weak object] observed in
+        return addObserver(for: object, objectKeyPath, mode, span, disposableBag: disposableBag) { [weak object, unowned objectKeyPath] observed in
             guard let object = object else { return }
             let value = observed[keyPath: sourceKeyPath]
             let mapped = mapper(value)
@@ -455,7 +455,7 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
                                          _ completion: ((T) -> ())? = nil) -> Disposable {
         
         if mode == .towWay { addTowWayBinding(object, objectKeyPath) }
-        return addObserver(for: object, objectKeyPath, mode, span, disposableBag: disposableBag) { [weak object] observed in
+        return addObserver(for: object, objectKeyPath, mode, span, disposableBag: disposableBag) { [weak object, unowned objectKeyPath] observed in
             guard let object = object else { return }
             let value = observed[keyPath: sourceKeyPath]
             object[keyPath: objectKeyPath] = value as! R

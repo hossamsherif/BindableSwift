@@ -69,6 +69,8 @@ class ViewController: UIViewController {
     
     var myView:MyView!
     
+    var disposableBag = DisposableBag()
+    
     var viewModel:ViewModelProtocol!
     
     //    var isLoading:Bool = false {
@@ -88,7 +90,7 @@ class ViewController: UIViewController {
         return viewModel.data.value ?? []
     }
     
-    var disposableBag = DisposableBag()
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -251,6 +253,10 @@ class ViewController: UIViewController {
         
 //        let tap = UITapGestureRecognizer()
         viewModel.input2.on(.tap, on: myView.label)
+        
+        myView.scrollView.contentOffsetBindable.observe {
+            print($0)
+        }
     }
 }
 
@@ -276,6 +282,8 @@ enum MyEnum {
 class MyView: UIView {
     
     var myEnum:MyEnum = .x
+    
+    let scrollView = UIScrollView()
     
     let button = { () -> UIButton in
         let button = UIButton(type: .system)
@@ -322,9 +330,12 @@ class MyView: UIView {
         stackView.addArrangedSubview(label)
         stackView.addArrangedSubview(textField)
         stackView.addArrangedSubview(switchControl)
-        stackView.addArrangedSubview(tableView)
+        stackView.addArrangedSubview(scrollView)
+//        stackView.addArrangedSubview(tableView)
+        
         addSubview(stackView)
         stackView.matchParentConstraint(margin: UIEdgeInsets(top: 30, left: 15, bottom: 0, right: -15))
+        scrollView.contentSize = CGSize(width: 100, height: 1000)
     }
     
     required init?(coder: NSCoder) {
