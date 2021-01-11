@@ -50,6 +50,7 @@ protocol ViewModelProtocol: class {
     
     var numberOnlyValidator: Event.Immutable { get }
     var name: Bindable<String>.Immutable { get }
+    var strTest: Bindable<String>.Immutable { get }
 }
 
 class ViewModel: ViewModelProtocol {
@@ -89,6 +90,7 @@ class ViewModel: ViewModelProtocol {
     
     @Event var numberOnlyValidator
     @Bindable<String> var name
+    @Bindable<String> var strTest
     
     init() {
         $data = generateData()

@@ -66,6 +66,8 @@ class UserDefaultsManager: UserDefaultsManagerProtocol {
 
 
 class ViewController: UIViewController {
+    @objc
+    dynamic var string = ""
     
     var myView:MyView!
     
@@ -257,6 +259,12 @@ class ViewController: UIViewController {
         myView.scrollView.contentOffsetBindable.observe {
             print($0)
         }
+        
+        viewModel.strTest.bind(\String.self, to: self, \.string, mode: .towWay) {
+            print($0)
+        }
+        
+        string = "qwe"
     }
 }
 

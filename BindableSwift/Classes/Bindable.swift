@@ -369,6 +369,7 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
     deinit {
         DisposableBag.dispose(primaryKey: primaryKey)
         NotificationCenter.default.removeObserver(self)
+        kvoSet.forEach{ $0.invalidate() }
     }
     
     @discardableResult
@@ -463,6 +464,24 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
         }
     }
     
+    @discardableResult
+    public func bind<O: NSObject, T, R>(_ sourceKeyPath: KeyPath<BindingType, T>,
+                                         to nsObject: O,
+                                         _ objectKeyPath: ReferenceWritableKeyPath<O, R>,
+                                         mode: BindMode = .oneWay,
+                                         _ span: Span = .always,
+                                         disposableBag: DisposableBag? = nil,
+                                         _ completion: ((T) -> ())? = nil) -> Disposable {
+        
+        if mode == .towWay { addTowWayBindingNSObject(nsObject, objectKeyPath) }
+        return addObserver(for: nsObject, objectKeyPath, mode, span, disposableBag: disposableBag) { [weak nsObject, unowned objectKeyPath] observed in
+            guard let nsObject = nsObject else { return }
+            let value = observed[keyPath: sourceKeyPath]
+            nsObject[keyPath: objectKeyPath] = value as! R
+            completion?(value)
+        }
+    }
+    
     //MARK: Private methods
     
     /// valueChanged call back when UIControl value is changed
@@ -547,6 +566,20 @@ public class ImmutableBindable<BindingType>: AbastractBindable {
         }
         keyPath = objectKeyPath
     }
+    
+    private func addTowWayBindingNSObject<O: NSObject, R>(_ nsObject: O,
+                                                   _ objectKeyPath: KeyPath<O, R>) {
+        
+        if let objectKeyPath = objectKeyPath as? KeyPath<O, BindingType> {
+            let kvoObservation = nsObject.observe(objectKeyPath) { [weak self] (_, change) in
+                self?.currentValue = change.newValue
+            }
+            kvoSet.insert(kvoObservation)
+        }
+        keyPath = objectKeyPath
+    }
+    
+    var kvoSet = Set<NSKeyValueObservation>()
     
     /// remove tow way bind from an object
     /// - Parameter object: object to remove binding from
