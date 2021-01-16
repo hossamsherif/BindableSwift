@@ -13,9 +13,7 @@ import BindableSwift
 class UnsignedNumberTF: UITextField {
     private lazy var validator = ImmutableEvent { [weak self]  in
         guard let self = self else { return }
-        if !(self.text?.last?.isNumber ?? true) {
-            self.text?.removeLast()
-        }
+        self.text = self.text?.filter { $0.isNumber }
     }
     
     override init(frame: CGRect) {

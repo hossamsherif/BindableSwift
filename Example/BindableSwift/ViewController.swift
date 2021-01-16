@@ -211,9 +211,9 @@ class ViewController: UIViewController {
             self.myView.tableView.reloadData()
         }
         
-        //        myView.button.addAction { sender in
-        //            print("cool action: \(sender.titleLabel?.text ?? "")")
-        //        }
+        myView.button.addAction { sender in
+            print("cool action: \(sender?.titleLabel?.text ?? "")")
+        }
         //
         //        myView.button.actionEvent.asBindable.observe {
         //            print("cool event: \($0.titleLabel?.text ?? "")")
@@ -243,9 +243,9 @@ class ViewController: UIViewController {
         //            print(int)
         //        }
         
-        viewModel
-            .input
-            .on(myView.button, for: .touchUpInside)
+//        viewModel
+//            .input
+//            .on(myView.button, for: .touchUpInside)
         
         //        viewModel.shouldGoToVC.observe(\Bool.self) { [weak self] in
         //            $0 ? self?.navigationController?.pushViewController(ViewController.create(), animated: true) : ()
@@ -296,18 +296,12 @@ class MyView: UIView {
         label.heightAnchor.constraint(greaterThanOrEqualToConstant: 21.0).isActive = true
         return label
     }()
-    let textField = { () -> UITextField in
-        let textField = UITextField()
+    let textField = { () -> UnsignedNumberTF in
+        let textField = UnsignedNumberTF()
         textField.borderStyle = .roundedRect
         textField.textContentType = .name
         return textField
     }()
-//    let textField = { () -> UnsignedNumberTF in
-//        let textField = UnsignedNumberTF()
-//        textField.borderStyle = .roundedRect
-//        textField.textContentType = .name
-//        return textField
-//    }()
     let switchControl = UISwitch()
     let tableView = { () -> UITableView in
         let tableView = UITableView()
@@ -331,7 +325,7 @@ class MyView: UIView {
         stackView.addArrangedSubview(textField)
         stackView.addArrangedSubview(switchControl)
         stackView.addArrangedSubview(scrollView)
-//        stackView.addArrangedSubview(tableView)
+        stackView.addArrangedSubview(tableView)
         
         addSubview(stackView)
         stackView.matchParentConstraint(margin: UIEdgeInsets(top: 30, left: 15, bottom: 0, right: -15))

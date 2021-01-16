@@ -106,8 +106,8 @@ public class ImmutableEventBindableBase<EventStateType, ActionType> {
     }
     
     @discardableResult
-    public func on<O: UIControl>(_ control:O, for event: UIControl.Event) -> Self {
-        on(selector: #selector(self.valueChanged(sender:)), control, for: event)
+    public func on<O: UIControl>(_ control:O, for event: UIControl.Event, _ disposableBag: DisposableBag? = nil) -> Self {
+        on(selector: #selector(self.valueChanged(sender:)), control, for: event, disposableBag)
         return self
     }
     

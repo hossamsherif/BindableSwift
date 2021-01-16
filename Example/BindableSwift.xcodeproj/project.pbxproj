@@ -14,10 +14,11 @@
 		5F934C7625A89C7000381C0E /* DisposableUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F934C7525A89C7000381C0E /* DisposableUnitTests.swift */; };
 		5F934C7C25A8B6D900381C0E /* DisposableBagSharedTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F934C7B25A8B6D900381C0E /* DisposableBagSharedTests.swift */; };
 		5F972773259722180020B1A3 /* UnsignedNumberTF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F972772259722180020B1A3 /* UnsignedNumberTF.swift */; };
-		5F97277725972CF40020B1A3 /* UIActionableButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F97277625972CF40020B1A3 /* UIActionableButton.swift */; };
-		5F97277B259731B50020B1A3 /* BSScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F97277A259731B50020B1A3 /* BSScrollView.swift */; };
+		5F97277725972CF40020B1A3 /* UIButton+Action.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F97277625972CF40020B1A3 /* UIButton+Action.swift */; };
+		5F97277B259731B50020B1A3 /* UIScrollView+contentOffsetBindable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F97277A259731B50020B1A3 /* UIScrollView+contentOffsetBindable.swift */; };
 		5FA1724A259E4F1D00F218F0 /* EventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FA17249259E4F1D00F218F0 /* EventTests.swift */; };
 		5FA17250259E545E00F218F0 /* EventableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FA1724F259E545E00F218F0 /* EventableTests.swift */; };
+		5FC49E6925B367D100E05564 /* ObjectAssociation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FC49E6825B367D100E05564 /* ObjectAssociation.swift */; };
 		607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD51AFB9204008FA782 /* AppDelegate.swift */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
 		607FACEC1AFB9204008FA782 /* BindaleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* BindaleTests.swift */; };
@@ -44,10 +45,11 @@
 		5F934C7525A89C7000381C0E /* DisposableUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisposableUnitTests.swift; sourceTree = "<group>"; };
 		5F934C7B25A8B6D900381C0E /* DisposableBagSharedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisposableBagSharedTests.swift; sourceTree = "<group>"; };
 		5F972772259722180020B1A3 /* UnsignedNumberTF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnsignedNumberTF.swift; sourceTree = "<group>"; };
-		5F97277625972CF40020B1A3 /* UIActionableButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIActionableButton.swift; sourceTree = "<group>"; };
-		5F97277A259731B50020B1A3 /* BSScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BSScrollView.swift; sourceTree = "<group>"; };
+		5F97277625972CF40020B1A3 /* UIButton+Action.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIButton+Action.swift"; sourceTree = "<group>"; };
+		5F97277A259731B50020B1A3 /* UIScrollView+contentOffsetBindable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIScrollView+contentOffsetBindable.swift"; sourceTree = "<group>"; };
 		5FA17249259E4F1D00F218F0 /* EventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventTests.swift; sourceTree = "<group>"; };
 		5FA1724F259E545E00F218F0 /* EventableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventableTests.swift; sourceTree = "<group>"; };
+		5FC49E6825B367D100E05564 /* ObjectAssociation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectAssociation.swift; sourceTree = "<group>"; };
 		607FACD01AFB9204008FA782 /* BindableSwift_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BindableSwift_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		607FACD41AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		607FACD51AFB9204008FA782 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -103,14 +105,15 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		5F972771259722090020B1A3 /* UIKit */ = {
+		5F972771259722090020B1A3 /* UIKit examples */ = {
 			isa = PBXGroup;
 			children = (
 				5F972772259722180020B1A3 /* UnsignedNumberTF.swift */,
-				5F97277625972CF40020B1A3 /* UIActionableButton.swift */,
-				5F97277A259731B50020B1A3 /* BSScrollView.swift */,
+				5F97277625972CF40020B1A3 /* UIButton+Action.swift */,
+				5F97277A259731B50020B1A3 /* UIScrollView+contentOffsetBindable.swift */,
+				5FC49E6825B367D100E05564 /* ObjectAssociation.swift */,
 			);
-			path = UIKit;
+			path = "UIKit examples";
 			sourceTree = "<group>";
 		};
 		607FACC71AFB9204008FA782 = {
@@ -137,7 +140,7 @@
 		607FACD21AFB9204008FA782 /* Example for BindableSwift */ = {
 			isa = PBXGroup;
 			children = (
-				5F972771259722090020B1A3 /* UIKit */,
+				5F972771259722090020B1A3 /* UIKit examples */,
 				5F2FD8AC258E60ED000E6A95 /* ViewController.swift */,
 				5F2FD895258E5FE1000E6A95 /* ViewModel.swift */,
 				607FACD51AFB9204008FA782 /* AppDelegate.swift */,
@@ -362,9 +365,10 @@
 			files = (
 				5F2FD8AD258E60ED000E6A95 /* ViewController.swift in Sources */,
 				5F972773259722180020B1A3 /* UnsignedNumberTF.swift in Sources */,
-				5F97277B259731B50020B1A3 /* BSScrollView.swift in Sources */,
+				5FC49E6925B367D100E05564 /* ObjectAssociation.swift in Sources */,
+				5F97277B259731B50020B1A3 /* UIScrollView+contentOffsetBindable.swift in Sources */,
 				5F2FD897258E5FE1000E6A95 /* ViewModel.swift in Sources */,
-				5F97277725972CF40020B1A3 /* UIActionableButton.swift in Sources */,
+				5F97277725972CF40020B1A3 /* UIButton+Action.swift in Sources */,
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

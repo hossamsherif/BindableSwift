@@ -15,7 +15,7 @@ public protocol Disposable: class {
 }
 
 /// Diposable Unit conform to Disposable protocol for any disposable component made
-class DisposableUnit: Disposable {
+public class DisposableUnit: Disposable {
     //MARK:- Private properties
     public var isDisposed = false
     private(set) var keyPair: KeyPair
@@ -26,14 +26,27 @@ class DisposableUnit: Disposable {
     
     /// BindableDisposable init
     /// - Parameters:
+    ///   - referenceObject: AnyObject reference
+    ///   - secondaryKey: secondaryKey of BindableDisposable object
+    ///   - disposeBlock: disposeBlock to be fired on dispose
+    /// - Returns: BindableDisposable instance
+    public convenience init(_ referenceObject: AnyObject,
+                            _ secondaryKey:String,
+                            disposableBag: DisposableBag? = nil,
+                            _ disposeBlock: @escaping () -> ()) {
+        self.init(ObjectIdentifier(referenceObject), secondaryKey, disposableBag: disposableBag, disposeBlock)
+    }
+    
+    /// BindableDisposable init
+    /// - Parameters:
     ///   - primaryKey: primaryKey of BindableDisposable object
     ///   - secondaryKey: secondaryKey of BindableDisposable object
     ///   - disposeBlock: disposeBlock to be fired on dispose
     /// - Returns: BindableDisposable instance
-    convenience init(_ primaryKey:ObjectIdentifier,
-                     _ secondaryKey:String,
-                     disposableBag: DisposableBag? = nil,
-                     _ disposeBlock: @escaping () -> ()) {
+    public convenience init(_ primaryKey:ObjectIdentifier,
+                            _ secondaryKey:String,
+                            disposableBag: DisposableBag? = nil,
+                            _ disposeBlock: @escaping () -> ()) {
         let keyPair = KeyPair(primary: primaryKey, secondary: secondaryKey)
         self.init(keyPair, disposableBag: disposableBag, disposeBlock)
     }
