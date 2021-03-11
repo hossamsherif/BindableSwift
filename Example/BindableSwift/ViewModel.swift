@@ -33,12 +33,6 @@ struct MyStruct {
 protocol ViewModelProtocol: class {
     var input: Event.Immutable { get }
     var input2: Event.Immutable { get }
-    var input3: Eventable<String>.Immutable { get }
-    var input4: Eventable<()>.Immutable { get }
-    var input5: Eventable<(name: String, active: Bool)>.Immutable { get }
-    var input6: EventResult<Bool>.Immutable { get }
-    var input7: EventResult<Void>.Immutable { get }
-    
     
     var shouldGoToVC: Bindable<Bool>.Immutable { get }
     
@@ -58,22 +52,6 @@ class ViewModel: ViewModelProtocol {
         print("hello")
     }.immutable
     @Event var input2
-    var i:Int  = 0
-    @Eventable<String> var input3
-    lazy var input4 = Eventable<()>({ [weak self] stateHandler in
-        guard let self = self else { return }
-        self.printHello(4)
-        self.$shouldGoToVC = true
-        stateHandler(())
-    }).immutable
-    @Eventable<(name: String,active: Bool)> var input5
-    @EventResult<Bool> var input6
-    lazy var input7 = EventResult<()>({ [weak self] stateHandler in
-        guard let self = self else { return }
-        self.printHello(4)
-        self.$shouldGoToVC = true
-        stateHandler(.success(()))
-    }).immutable
     lazy var viewDidLoad = Event { [weak self] in
         guard let self = self else { return }
         self.viewDidLoadHanlding()
@@ -92,29 +70,9 @@ class ViewModel: ViewModelProtocol {
     
     init() {
         $data = generateData()
-//        $name = "first"
         $myStruct = MyStruct(name: "ABC", active: true)
         $input2 = {
             print("hello2")
-        }
-        $input6 = { stateHandler in
-            stateHandler(.success(true))
-//            stateHandler(.failure(NSError(domain: "error.domain", code: 101, userInfo: nil)))
-//            stateHandler(.failure(MyError.custom(code: 200, description: "custom")))
-        }
-        let input3State = self.input3.asBindable
-        $input3 = { [weak input3State] stateHandler in
-            var value = input3State?.value ?? ""
-            if value.last == "$" {
-                value.removeLast()
-            }
-            stateHandler(value)
-        }
-        $numberOnlyValidator = { [weak self] in
-            guard let self = self, let lastChar = self.$name.last else { return }
-            if !lastChar.isNumber {
-                print(self.$name.removeLast())
-            }
         }
     }
     

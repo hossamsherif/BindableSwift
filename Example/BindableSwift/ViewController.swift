@@ -73,24 +73,9 @@ class ViewController: UIViewController {
     
     var viewModel:ViewModelProtocol!
     
-    //    var isLoading:Bool = false {
-    //        didSet {
-    //            if isLoading {
-    //                loader.startAnimating()
-    //            }
-    //            else {
-    //
-    //                loader.stopAnimating()
-    //            }
-    //            loader.isHidden = !isLoading
-    //        }
-    //    }
-    
     var data:[CellViewModelProtocol] {
         return viewModel.data.value ?? []
     }
-    
-
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -107,7 +92,6 @@ class ViewController: UIViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        //        DisposableBag.dispose(self)
     }
     
     func setupView() {
@@ -123,10 +107,8 @@ class ViewController: UIViewController {
         viewController.viewModel = viewModel
         return viewController
     }
+    
     func bindUserDefaults() {
-//        UserDefaultsManager.shared.appVersion.bind(to: self, \.title, mapper: {
-//            "Bindable Example \($0 ?? "")"
-//        }, disposableBag: disposableBag)
         UserDefaultsManager.shared
             .appVersion
             .bindOn(self, \.title)
@@ -143,9 +125,6 @@ class ViewController: UIViewController {
     }
     
     func bindVM() {
-        //        if UserDefaultsManager.shared.isFirstTime.value {
-        //            UserDefaultsManager.shared.isFirstTime.value = false
-        //        }
         
         viewModel.isLoading.bind(to: myView.loader, \.isHidden, mapper: { !$0 }) { [weak self] in
             $0 ? self?.myView.loader.stopAnimating() : self?.myView.loader.startAnimating()
@@ -190,18 +169,7 @@ class ViewController: UIViewController {
             .done {
                 print($0)
             }
-        
-        
-        //        viewModel.name.observe(\String.self) { [weak self] in
-        //            self?.myView.switchControl.setOn($0.isEmpty, animated: true)
-        //        }
-        //        viewModel.isLoading.bind(to: myView, \.myEnum, mapper: { $0 ? .x : .y }) { [weak self] in
-        //            print($0, self?.myView.myEnum ?? "-")
-        //        }
-        
-        //        viewModel.myStruct.bind(\.name, to: myView.label, \.text, mapper: { $0.description })
-        //        viewModel.name.bind(\String.self, to: myView.switchControl, \.isOn, mapper:  { $0.isEmpty })
-        
+
         viewModel.name.observe{ [weak self] in
             self?.myView.switchControl.setOn($0.isEmpty, animated: true)
         }
@@ -214,47 +182,9 @@ class ViewController: UIViewController {
         myView.button.addAction { sender in
             print("cool action: \(sender?.titleLabel?.text ?? "")")
         }
-        //
-        //        myView.button.actionEvent.asBindable.observe {
-        //            print("cool event: \($0.titleLabel?.text ?? "")")
-        //        }
-        
-        //            .bind(self, \.names, mapper: { $0.compactMap { $0.title.value } })
-        //
-        //        viewModel
-        //            .input6
-        //            .on(myView.button, for: .touchUpInside)
-        //            .asBindable
-        //            .observe { [weak self] result in
-        //                do {
-        //                    let x = try result.get()
-        //                    print("vc eventStae: \(x)")
-        //                    self?.navigationController?.pushViewController(ViewController.create(), animated: true)
-        //                } catch MyError.boom {
-        //                    print(MyError.boom)
-        //                } catch MyError.custom(let code, let description){
-        //                    print(code, description)
-        //                } catch {
-        //                    print("default")
-        //                }
-        //            }
-        //        viewModel.input.signal()
-        //        viewModel.input3().observe { (int) in
-        //            print(int)
-        //        }
-        
-//        viewModel
-//            .input
-//            .on(myView.button, for: .touchUpInside)
-        
-        //        viewModel.shouldGoToVC.observe(\Bool.self) { [weak self] in
-        //            $0 ? self?.navigationController?.pushViewController(ViewController.create(), animated: true) : ()
-        //        }
-        
-//        let tap = UITapGestureRecognizer()
         viewModel.input2.on(.tap, on: myView.label)
         
-        myView.scrollView.contentOffsetBindable.observe {
+        myView.tableView.contentOffsetBindable.observe {
             print($0)
         }
     }
@@ -283,8 +213,6 @@ class MyView: UIView {
     
     var myEnum:MyEnum = .x
     
-    let scrollView = UIScrollView()
-    
     let button = { () -> UIButton in
         let button = UIButton(type: .system)
         button.setTitle("Let's go", for: .normal)
@@ -296,8 +224,8 @@ class MyView: UIView {
         label.heightAnchor.constraint(greaterThanOrEqualToConstant: 21.0).isActive = true
         return label
     }()
-    let textField = { () -> UnsignedNumberTF in
-        let textField = UnsignedNumberTF()
+    let textField = { () -> UITextField in
+        let textField = UITextField()
         textField.borderStyle = .roundedRect
         textField.textContentType = .name
         return textField
@@ -324,12 +252,10 @@ class MyView: UIView {
         stackView.addArrangedSubview(label)
         stackView.addArrangedSubview(textField)
         stackView.addArrangedSubview(switchControl)
-        stackView.addArrangedSubview(scrollView)
         stackView.addArrangedSubview(tableView)
         
         addSubview(stackView)
         stackView.matchParentConstraint(margin: UIEdgeInsets(top: 30, left: 15, bottom: 0, right: -15))
-        scrollView.contentSize = CGSize(width: 100, height: 1000)
     }
     
     required init?(coder: NSCoder) {

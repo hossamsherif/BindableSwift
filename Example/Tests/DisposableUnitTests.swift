@@ -10,17 +10,18 @@ import XCTest
 @testable import BindableSwift
 
 class DisposableUnitTests: XCTestCase {
+    
+    var disposableBag:DisposableBag!
 
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        disposableBag = DisposableBag()
     }
 
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        disposableBag = nil
     }
     
     func testInitPrimaryKeySecondaryKey() {
-        let disposableBag = DisposableBag()
         let primaryKey = ObjectIdentifier(self)
         let secondaryKey = UUID().uuidString
         var disposeBlockCalled = false
@@ -39,7 +40,6 @@ class DisposableUnitTests: XCTestCase {
 
 
     func testInitKeyPair() {
-        let disposableBag = DisposableBag()
         let keyPair = KeyPair(primary: ObjectIdentifier(self), secondary: UUID().uuidString)
         var disposeBlockCalled = false
         XCTAssertTrue(disposableBag.container.isEmpty)
@@ -55,7 +55,6 @@ class DisposableUnitTests: XCTestCase {
     }
     
     func testDispose() {
-        let disposableBag = DisposableBag()
         let keyPair = KeyPair(primary: ObjectIdentifier(self), secondary: UUID().uuidString)
         var disposeBlockCalled = false
         XCTAssertTrue(disposableBag.container.isEmpty)
@@ -71,7 +70,6 @@ class DisposableUnitTests: XCTestCase {
     }
     
     func testDisposeTwice() {
-        let disposableBag = DisposableBag()
         let keyPair = KeyPair(primary: ObjectIdentifier(self), secondary: UUID().uuidString)
         var disposeBlockCalledCount = 0
         XCTAssertTrue(disposableBag.container.isEmpty)
